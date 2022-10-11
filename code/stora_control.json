@@ -1,0 +1,21 @@
+{
+    "help": "set from `true` to `false` to stop channel recordings/scripts copying to QNAP04",
+    "bbconehd": true,
+    "bbctwohd": true,
+    "bbcthree": true,
+    "bbcfourhd": true,
+    "bbcnewshd": true,
+    "cbbchd": true,
+    "cbeebieshd": true,
+    "itv1": true,
+    "itv2": true,
+    "itv3": true,
+    "itv4": true,
+    "citv": true,
+    "more4": true,
+    "channel4": true,
+    "film4": true,
+    "5star": true,
+    "five": true,
+    "stora_qnap04": true
+}

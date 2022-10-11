@@ -1,0 +1,170 @@
+[
+    {
+        "start": "2022-10-03 00:10:00",
+        "duration": 5,
+        "channel": "bbconehd",
+        "programme": "Weather for the Week Ahead"
+    },
+    {
+        "start": "2022-10-03 00:15:00",
+        "duration": 285,
+        "channel": "bbconehd",
+        "programme": "BBC News"
+    },
+    {
+        "start": "2022-10-03 05:00:00",
+        "duration": 195,
+        "channel": "bbconehd",
+        "programme": "Breakfast"
+    },
+    {
+        "start": "2022-10-03 08:15:00",
+        "duration": 45,
+        "channel": "bbconehd",
+        "programme": "Rip Off Britain"
+    },
+    {
+        "start": "2022-10-03 09:00:00",
+        "duration": 45,
+        "channel": "bbconehd",
+        "programme": "Crimewatch Live"
+    },
+    {
+        "start": "2022-10-03 09:45:00",
+        "duration": 30,
+        "channel": "bbconehd",
+        "programme": "Northern Justice"
+    },
+    {
+        "start": "2022-10-03 10:15:00",
+        "duration": 60,
+        "channel": "bbconehd",
+        "programme": "Homes Under the Hammer"
+    },
+    {
+        "start": "2022-10-03 11:15:00",
+        "duration": 45,
+        "channel": "bbconehd",
+        "programme": "Bargain Hunt"
+    },
+    {
+        "start": "2022-10-03 12:00:00",
+        "duration": 30,
+        "channel": "bbconehd",
+        "programme": "BBC News at One; Weather"
+    },
+    {
+        "start": "2022-10-03 12:30:00",
+        "duration": 15,
+        "channel": "bbconehd",
+        "programme": "This Is BBC One HD"
+    },
+    {
+        "start": "2022-10-03 12:45:00",
+        "duration": 30,
+        "channel": "bbconehd",
+        "programme": "Doctors"
+    },
+    {
+        "start": "2022-10-03 13:15:00",
+        "duration": 45,
+        "channel": "bbconehd",
+        "programme": "London Kills"
+    },
+    {
+        "start": "2022-10-03 14:00:00",
+        "duration": 45,
+        "channel": "bbconehd",
+        "programme": "Escape to the Country"
+    },
+    {
+        "start": "2022-10-03 14:45:00",
+        "duration": 45,
+        "channel": "bbconehd",
+        "programme": "Antiques Road Trip"
+    },
+    {
+        "start": "2022-10-03 15:30:00",
+        "duration": 45,
+        "channel": "bbconehd",
+        "programme": "The Tournament"
+    },
+    {
+        "start": "2022-10-03 16:15:00",
+        "duration": 45,
+        "channel": "bbconehd",
+        "programme": "Pointless"
+    },
+    {
+        "start": "2022-10-03 17:00:00",
+        "duration": 30,
+        "channel": "bbconehd",
+        "programme": "BBC News at Six; Weather"
+    },
+    {
+        "start": "2022-10-03 17:30:00",
+        "duration": 30,
+        "channel": "bbconehd",
+        "programme": "This Is BBC One HD"
+    },
+    {
+        "start": "2022-10-03 18:00:00",
+        "duration": 30,
+        "channel": "bbconehd",
+        "programme": "The One Show"
+    },
+    {
+        "start": "2022-10-03 18:30:00",
+        "duration": 30,
+        "channel": "bbconehd",
+        "programme": "EastEnders"
+    },
+    {
+        "start": "2022-10-03 19:00:00",
+        "duration": 30,
+        "channel": "bbconehd",
+        "programme": "The Green Energy Scandal Exposed: Panorama"
+    },
+    {
+        "start": "2022-10-03 19:30:00",
+        "duration": 30,
+        "channel": "bbconehd",
+        "programme": "We Are England"
+    },
+    {
+        "start": "2022-10-03 20:00:00",
+        "duration": 60,
+        "channel": "bbconehd",
+        "programme": "Inside Man"
+    },
+    {
+        "start": "2022-10-03 21:00:00",
+        "duration": 30,
+        "channel": "bbconehd",
+        "programme": "BBC News at Ten"
+    },
+    {
+        "start": "2022-10-03 21:30:00",
+        "duration": 10,
+        "channel": "bbconehd",
+        "programme": "This Is BBC One HD"
+    },
+    {
+        "start": "2022-10-03 21:40:00",
+        "duration": 40,
+        "channel": "bbconehd",
+        "programme": "Have I Got a Bit More News for You"
+    },
+    {
+        "start": "2022-10-03 22:20:00",
+        "duration": 50,
+        "channel": "bbconehd",
+        "programme": "The Graham Norton Show"
+    },
+    {
+        "start": "2022-10-03 23:10:00",
+        "duration": 60,
+        "channel": "bbconehd",
+        "programme": "Ambulance"
+    }
+]

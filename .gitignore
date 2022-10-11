@@ -1,0 +1,15 @@
+# Folders/files to ignore in git repository
+code/logs/
+code/move_logs/
+code/ENV/
+content/
+**deprecated/
+code/schedules/*
+!code/schedules/demonstration_schedule.json
+code/move_stora_content_backup.py
+code/news_backup_move_qnap04.py
+code/redux_channel_move_qnap_04.py
+code/redux_remove_after_seven_days.py
+code/remove_after_seven_days.py
+code/flock_rebuild.sh
+
