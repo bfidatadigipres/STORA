@@ -300,11 +300,12 @@ def check_remaining_schedule(schedule, sched_time, index, total_index):
     dt = datetime.strptime(sched_time, FORMAT)
     for num in range(index, total_index):
         dct = schedule[num]
+        print(f"Assessing for deletion: {dct}")
         start = dct["start"]
         sched_start = datetime.strptime(start, FORMAT)
         if dt > sched_start:
-            print(f"Schedule to be deleted: {dct}")
-            delete_list.append(schedule[num])
+            print(f"DELETED: {dct}")
+            delete_list.append(dct)
 
     for item in delete_list:
         schedule.remove(item)
@@ -432,7 +433,7 @@ def main():
                     for num in range(next_index, len(schedule)):
                         new_schedule.append(schedule[num])
                     # Remove shcedule items that might be overlapping
-                    new_schedule = check_remaining_schedule(new_schedule, next_dt_start, next_index, len(new_schedule))
+                    new_schedule = check_remaining_schedule(new_schedule, next_dt_end, next_index, len(new_schedule))
 
                 else:
                     # Update the next item's start time instead
@@ -440,7 +441,7 @@ def main():
                     schedule[next_index].update({"start": f"{next_dt_start}"})
                     LOGGER.info("New start time for next programme: %s", next_dt_start)
                     # Remove schedule items that have been replaced by different start time
-                    new_schedule = check_remaining_schedule(schedule, next_dt_start, next_index, len(schedule))
+                    new_schedule = check_remaining_schedule(schedule, next_dt_end, next_index, len(schedule))
 
             orig_sched = []
             orig_sched = open_schedule(schedule_path)
