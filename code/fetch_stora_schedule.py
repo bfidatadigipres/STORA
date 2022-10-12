@@ -1,10 +1,8 @@
 #!/usr/bin/env python3.8
 
 '''
-Fetch JSON from augmented EPG metadata API for next seven day's shows (not today's)
+Fetch JSON from PATV EPG metadata API for next four day's shows (not today's)
 Overwrite each time and split into channels and place into correct channel/date folder
-ALL TIMINGS UTC ZULU IN ALIGNMENT WITH CAPTURE TS METADATA
-Any DST adjustment need making for CID data only +1:00 UTC in summertime
 
 main():
 1. Creates STORA schedules for next four days if not already created
@@ -68,10 +66,11 @@ DATE_PATH1 = START1[0:4] + "/" + START1[5:7] + "/" + START1[8:10]
 DATE_PATH2 = START2[0:4] + "/" + START2[5:7] + "/" + START2[8:10]
 DATE_PATH3 = START3[0:4] + "/" + START3[5:7] + "/" + START3[8:10]
 DATE_PATH4 = START4[0:4] + "/" + START4[5:7] + "/" + START4[8:10]
-PATHS = [os.path.join(STORAGE_PATH, DATE_PATH1),
-         os.path.join(STORAGE_PATH, DATE_PATH2),
-         os.path.join(STORAGE_PATH, DATE_PATH3),
-         os.path.join(STORAGE_PATH, DATE_PATH4)
+PATHS = [
+    os.path.join(STORAGE_PATH, DATE_PATH1),
+    os.path.join(STORAGE_PATH, DATE_PATH2),
+    os.path.join(STORAGE_PATH, DATE_PATH3),
+    os.path.join(STORAGE_PATH, DATE_PATH4)
 ]
 
 # Setup logging

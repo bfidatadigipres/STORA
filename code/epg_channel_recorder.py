@@ -499,7 +499,7 @@ def main():
             time_print("Exiting...\n")
 
         active = check_control()
-        if active == 'False':
+        if active.lower() == 'false':
             time_print("Script exit requested by stora_control.json")
             time_print("Ending current recording following exit request.")
             player.stop()

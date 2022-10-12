@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
 
 '''
-Targeting yesterday's STORA folders and
-only those within the CHANNELS list.
-Copying each channel at 3am to STORA for ingest
-to CID DPI.
+Relocates each day's off-air recordings
+to designated storage, for DPI integration.
+Runs in early hours targetting yesterday's
+recorded content.
 
-Runs at this time to avoid moving before
-info.csv and subtitle.vtt creation completed
-for last recorded items.
+main():
+1. Iterates list of CHANNELS, creates
+   fpath then generates list of folders
+   contained within (programme folders).
+2. Checks if correct date path for yesterday
+   is in designated storage path, if not
+   creates new path
+3. Creates new programme folder path variable,
+   strips training '/' for rsync command
+4. Initiates copy from local storage to
+   designated storage of programme folder and
+   all contents. Deletes all files from local
+   storage.
 
 Joanna White
 2022

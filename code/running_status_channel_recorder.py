@@ -45,7 +45,6 @@ CONFIG_UDP = os.path.join(CODEPTH, 'stream_config_udp.json')
 CONTROL = os.path.join(CODEPTH, 'stora_control.json')
 DVBTEE = os.environ['DVBTEE']
 FORMAT = '%Y-%m-%d %H:%M:%S'
-FDATE = '%Y-%m-%d'
 FTIME = '%H-%M-%S'
 
 
@@ -190,13 +189,13 @@ def main():
                 continue
 
         active = check_control()
-        if active == 'False':
+        if active.lower() == 'false':
             time_print("Script exit requested by stora_control.json")
             time_print(f"Ending current recording following exit request.")
             player.stop()
             player.release()
             inst.release()
-            sys.exit("stora_control.json requests script exits")
+            active = False
 
 
 @retry

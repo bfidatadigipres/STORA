@@ -1,16 +1,20 @@
-#!/usr/bin/env LANG=en_UK.UTF-8 /usr/local/bin/python3
+#!/usr/bin/env python3
 
 '''
 Script that iterates through folders, looking for stream.mpeg2.ts
 files, then extract UTC metadata and descriptions.
 
 main():
-1. Find yesterday/today files whose end times < now
-2. Use mediainfo to capture all lines with 'Running'
-3. Check for line that has stream folder start time match
-4. Create list of data to match Redux info.csv
-5. Use pandas to create CSV file and dump data to it
-6. Save alongside stream called 'info.csv'
+1. Create list of folders for yesterday's and today's recordings
+2. Iterate each list, extract programme start time and duration
+   and check if end time is less than time. If not skip.
+3. Use mediainfo to capture all lines UTC metadata lines that
+   feature 'Running' in the data, and check for UTC start time
+   matches with folder start time.
+4. If yes, extract metadata into list of title, description etc.
+   If no, then skip this file as metadata may be inaccurate
+5. Use pandas to create CSV file and dump data to it, save
+   alongside stream in file called 'info.csv'
 
 Joanna White
 2022
@@ -90,8 +94,9 @@ def get_metadata(filepath):
     Use subprocess to capture list of 'Running'
     '''
 
-    cmd = ['mediainfo',
-           filepath
+    cmd = [
+        'mediainfo',
+        filepath
     ]
 
     try:

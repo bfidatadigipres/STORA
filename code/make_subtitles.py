@@ -1,4 +1,4 @@
-#!/usr/bin/env LANG=en_UK.UTF-8 /usr/local/bin/python3
+#!/usr/bin/env python3
 
 '''
 Script that creates subtitle.vtt files using
@@ -8,7 +8,7 @@ main():
 1. Iterate through channel folders looking for programme folders
    whose end times have completed (start time + duration > now)
 2. Check if subtitles.vtt exists in folder with content
-3. If not, make subtitles.vtt from stream.mpeg2.ts
+   If not, make subtitles.vtt from stream.mpeg2.ts
 
 Joanna White
 2022
@@ -44,23 +44,25 @@ HDLR.setFormatter(FORMATTER)
 LOGGER.addHandler(HDLR)
 LOGGER.setLevel(logging.INFO)
 
-CHANNELS = ['bbconehd',
-            'bbctwohd',
-            'bbcthree',
-            'bbcfourhd',
-            'bbcnewshd',
-            'cbbchd',
-            'cbeebieshd',
-            'citv',
-            'channel4',
-            'five',
-            'film4',
-            '5star',
-            'itv1',
-            'itv2',
-            'itv3',
-            'itv4',
-            'more4']
+CHANNELS = [
+    'bbconehd',
+    'bbctwohd',
+    'bbcthree',
+    'bbcfourhd',
+    'bbcnewshd',
+    'cbbchd',
+    'cbeebieshd',
+    'citv',
+    'channel4',
+    'five',
+    'film4',
+    '5star',
+    'itv1',
+    'itv2',
+    'itv3',
+    'itv4',
+    'more4'
+]
 
 
 def get_end_time(folder, date):
