@@ -11,6 +11,6 @@ if pgrep -f 'epg_channel_recorder.py cbbchd';
   else
     echo "** SCRIPT NOT RUNNING. LAUNCHING NOW"
     DATETIME=$(date +%Y-%m-%d_%H:%M:%S)
-    touch "${STORA_PATH}${DATE}/cbbchd/restart_${DATETIME}.txt"
+    touch "${STORAGE_PATH}${DATE}/cbbchd/restart_${DATETIME}.txt"
     "${CODE}ENV/bin/python3" "${CODE}epg_channel_recorder.py" "cbbchd" >> "${STORAGE_PATH}${DATE}/cbbchd/recording.log" 2>&1
 fi

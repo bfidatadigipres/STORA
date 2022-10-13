@@ -11,6 +11,6 @@ if pgrep -f 'epg_channel_recorder.py bbcnewshd';
   else
     echo "** SCRIPT NOT RUNNING. LAUNCHING NOW"
     DATETIME=$(date +%Y-%m-%d_%H:%M:%S)
-    touch "${STORA_PATH}${DATE}/bbcnewshd/restart_${DATETIME}.txt"
+    touch "${STORAGE_PATH}${DATE}/bbcnewshd/restart_${DATETIME}.txt"
     "${CODE}ENV/bin/python3" "${CODE}epg_channel_recorder.py" "bbcnewshd" >> "${STORAGE_PATH}${DATE}/bbcnewshd/recording.log" 2>&1
 fi
