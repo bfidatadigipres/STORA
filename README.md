@@ -93,12 +93,12 @@ The scripts are to be driven from a server /etc/crontab, some launch at specific
 
 Crontab entries for recordings scripts and supporting STORA scripts:  
 
-### STORA RECORDING SCHEDULED AT MIDNIGHT EACH NIGHT  
+##### STORA RECORDING SCHEDULED AT MIDNIGHT EACH NIGHT  
     58    23    *    *    *       username      ${PYENV}  ${CODE}epg_channel_recorder.py 'channel4' >> ${STORAGE_PATH}$(date --date='tomorrow' +\%Y/\%m/\%d)/channel4/recording.log 2>&1  
     58    23    *    *    *       username      ${PYENV}  ${CODE}epg_channel_recorder.py 'film4' >> ${STORAGE_PATH}$(date --date='tomorrow' +\%Y/\%m/\%d)/film4/recording.log 2>&1  
     58    23    *    *    *       username      ${PYENV}  ${CODE}epg_channel_recorder.py 'more4' >> ${STORAGE_PATH}$(date --date='tomorrow' +\%Y/\%m/\%d)/more4/recording.log 2>&1  
 
-### STORA RESTART CHECKS, EVERY MINUTE AND RESTART IF SCRIPT NOT RUNNING  
+##### STORA RESTART CHECKS, EVERY MINUTE AND RESTART IF SCRIPT NOT RUNNING  
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbcone.lock  ${CODE}restart_rs/script_restart_bbcone.sh  
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbctwo.lock  ${CODE}restart_rs/script_restart_bbctwo.sh  
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbcthree.lock  ${CODE}restart_rs/script_restart_bbcthree.sh  
@@ -106,9 +106,9 @@ Crontab entries for recordings scripts and supporting STORA scripts:
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbcnews.lock  ${CODE}restart_rs/script_restart_bbcnews.sh  
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_cbbc.lock  ${CODE}restart_rs/script_restart_cbbc.sh
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_cbeebies.lock  ${CODE}restart_rs/script_restart_cbeebies.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_channel4.lock  ${CODE}restart_epg/script_restart_channel4.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_film4.lock  ${CODE}restart_epg/script_restart_film4.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_more4.lock  ${CODE}restart_epg/script_restart_more4.sh  
+    *  0-23     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_channel4.lock  ${CODE}restart_epg/script_restart_channel4.sh  
+    *  0-23     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_film4.lock  ${CODE}restart_epg/script_restart_film4.sh  
+    *  0-23     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_more4.lock  ${CODE}restart_epg/script_restart_more4.sh  
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_itv1.lock  ${CODE}restart_rs/script_restart_itv1.sh  
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_itv2.lock  ${CODE}restart_rs/script_restart_itv2.sh  
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_itv3.lock  ${CODE}restart_rs/script_restart_itv3.sh  
@@ -117,7 +117,7 @@ Crontab entries for recordings scripts and supporting STORA scripts:
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_five.lock  ${CODE}restart_rs/script_restart_five.sh  
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_5star.lock  ${CODE}restart_rs/script_restart_5star.sh 
 
-### STORA SUPPORTING SCRIPTS  
+##### STORA SUPPORTING SCRIPTS  
     */1   *     *    *    *       username      ${CODE}flock_rebuild.sh  
     
 
