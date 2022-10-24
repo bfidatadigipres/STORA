@@ -31,7 +31,7 @@ Requests - https://pypi.org/project/requests/ (import requests)
 
 ### Environmental variable storage  
 
-These scripts are being operated using environmental variables that store all path and key data for the script operations. These environmental variables are persistent so can be called indefinitely.  
+These scripts are being operated using environmental variables that store all path and key data for the script operations. These environmental variables are persistent so can be called indefinitely. They are imported to Python scripts near the beginning using ```os.environ['VARIABLE']```, and are called in shell scripts like ```"${VARIABLE}" "$VARIABLE"```. They are saved to the /etc/environment file.  
 
 
 ### Operational environment  
@@ -97,7 +97,7 @@ media/
 
 ### Supporting crontab actions  
 
-The scripts are to be driven from a server /etc/crontab, some launch at specific times of the day, and others continually throughout the day with the use of Flock locks. Locks prevent the scripts from running multiple versions at once and overburdening the server. The crontab calls the scripts via Linux Flock lock files (called from /usr/bin/flock shown below). These are manually created in the /var/run folder and should be created by the username listed in the crontab. It is common for the lock files to disappear when a server is rebooted, etc so the flock_rebuild script manages the recreation of Flock files if missing. Crontab entries for recordings scripts and supporting STORA scripts:  
+The scripts are to be driven from a server /etc/crontab. Some launch once a day at a specific time and others launch continually throughout the day with the use of Flock locks. Locks prevent the scripts from running multiple versions at once and overburdening the server. The crontab calls the scripts via Linux Flock lock files (called from /usr/bin/flock shown below). These are manually created in the /var/run folder and should be created by the username listed in the crontab. It is common for the lock files to disappear when a server is rebooted, etc so the flock_rebuild script manages the recreation of Flock files if missing. Crontab entries for recordings scripts and supporting STORA scripts:  
 
 ##### STORA RECORDING SCHEDULED AT MIDNIGHT EACH NIGHT  
     58    23    *    *    *       username      ${PYENV}  ${CODE}epg_channel_recorder.py 'channel4' >> ${STORAGE_PATH}$(date --date='tomorrow' +\%Y/\%m/\%d)/channel4/recording.log 2>&1  
