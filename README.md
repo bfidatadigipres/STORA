@@ -2,22 +2,21 @@
 
 The scripts in this repository form the off-air TV recording codebase responsible for recording and preserving 17 UK Television channels 24 hours a day, 7 day a week. The BFI National Archive is the body designated by Ofcom (UK communications regulator) as the National Television Archive, under the provision in the Broadcasting Act, 1990, and in that capacity we have provision to record, preserve and make accessible off-air television.
 
+
 ### Overview
 
-These scripts manage the recording of live television, accessing FreeSat streams using RTP streams for the recordings and UDP streams to access DVB Event Information Tables (EIT). The streams have variable EIT data so two different methods are used to record the off-air content on this basis.  
+These scripts manage the recording of live television, accessing FreeSat using Real-time Transport Protocol (RTP) for the recordings and User Datagram Protocol (UDP) to access Digital Video Broadcasting (DVB) Service Information Event Information Table (EIT). The streams have variable EIT data so two different approaches to recording the off-air content are required:  
 
-The first uses Electronic Programme Guide (EPG) data downloaded daily from PATV Metadata Services Ltd. From this a recording schedule is generated for each channel, the script loops over this schedule starting/stopping until no more remain. Should programme's duration extend, such as for live events, scripts update new schedule timings and the recording script sees this modification time change and refreshes the recording script which alters the stop/start times accordingly.  This script runs to close of the schedule, then is restarted from crontab the following day.  
+The first uses Electronic Programme Guide (EPG) data downloaded daily from PATV Metadata Services Ltd. From this a recording schedule is generated for each channel, the script loops over this schedule starting/stopping until no more remain. Should programme's duration extend, such as for live events, scripts update new schedule timings and the recording script sees this modification time change and refreshes the recording script which alters the stop/start times accordingly.  This script runs until all items on the schedule have completed recording then exits. A new version of the script is restarted from crontab the following day just before midnight.  
 
-The second script uses the channel's UDP EIT data to download the now/next programme's EventID, and the running status number for each (4 is running now, 1 is not running). When an EventID changes and that programme has a running status 4 then the script stops the existing recording and starts the next. The EIT data also supplies remaining start time and duration information to assist with creating the correct folder path for the recording to be placed in. This script runs on an infite loop that can be stopped using a control.json document.  
-
-There are several other supporting scripts that allow for these recordings to occur, full details of each follow.  
+The second script uses the channel's UDP EIT data to download the current airing programme's EventID, and the RunningStatus number for (4 is running, 1 is not running). When an EventID changes and that programme has a RunningStatus '4' then the script stops the existing recording and starts the next. The EIT data also supplies remaining start time and duration information to assist with creating the correct folder path for the recording to be placed in. This script runs on an infite loop that can be stopped using a control.json document.  
 
 
 ### Dependencies
 
-These scripts are run from Ubuntu 20.04LTS installed server and rely upon various Linux command line programmes. These include: rsync, flock, pgrep, cat, echo, basename, dirname, find, date and possibly more. You can find out more about these by running the manual (man rsync) or by calling the help page (rsync --help).  
+These scripts are run from Ubuntu 20.04LTS server and rely upon various Linux command line programmes. These include: rsync, flock, pgrep, cat, echo, basename, dirname, find, date... You can find out more about these programmes by launching the manual (man rsync) or by calling the help page (rsync --help).  
 
-Several open source softwares are used. Please follow the links below to make installations:  
+Several open source softwares and Python packages (in addition to Python standard library) are used. Please follow the links below for installation guidance:  
 FFmpeg Version 4+ - https://ffmpeg.org/  
 VLC Version 3+ - https://videolan.org  
 MediaInfo V19.09 + - https://mediaarea.net/mediainfo  
@@ -32,7 +31,8 @@ Requests - https://pypi.org/project/requests/ (import requests)
 
 ### Environmental variable storage  
 
-These scripts are being operated using environmental variables that store all path and key data for the script operations. These environmental variables are persistent so can be called indefinitely. A list of environmental variables functions follow at the bottom of this document.  
+These scripts are being operated using environmental variables that store all path and key data for the script operations. These environmental variables are persistent so can be called indefinitely.  
+
 
 ### Operational environment  
 
@@ -40,59 +40,58 @@ The scripts write data to a date/channel/programme folder structure. These folde
 
 ```bash
 media/  
-└── data/  
-    └── 2022/  
-        └── 10/  
-            ├── 10/  
-            │   ├── 5star/  
-            │   │   ├── 09-30-00-123-00-30-00/  
-            │   │   │   ├── info.csv  
-            │   │   │   ├── stream.mpeg2.ts  
-            │   │   │   └── subtitles.vtt  
-            │   │   ├── 10-00-00-124-00-60-00/  
-            │   │   │   ├── info.csv  
-            │   │   │   ├── stream.mpeg2.ts  
-            │   │   │   └── subtitles.vtt  
-            │   │   └── 11-00-00-125-00-45-00/  
-            │   │       ├── info.csv  
-            │   │       ├── stream.mpeg2.ts  
-            │   │       └── subtitles.vtt  
-            │   ├── bbcfourhd/  
-            │   │   ...  
-            │   ├── bbcnewshd/  
-            │   │   ...  
-            │   ├── bbconehd/  
-            │   │   ...  
-            │   ├── bbcthree/  
-            │   │   ...  
-            │   ├── bbctwohd/  
-            │   │   ...  
-            │   ├── cbbcshd/  
-            │   │   ...  
-            │   ├── cbeebieshd/  
-            │   │   ...  
-            │   ├── channel4/  
-            │   │   ...  
-            │   ├── citv/  
-            │   │   ...  
-            │   ├── film4/  
-            │   │   ...  
-            │   ├── five/  
-            │   │   ...  
-            │   ├── itv1/  
-            │   │   ...  
-            │   ├── itv2/  
-            │   │   ...  
-            │   ├── itv3/  
-            │   │   ...  
-            │   ├── itv4/  
-            │   │   ...  
-            │   └── more4/  
-            │       ...
-            ├── 11/  
-            │   ...  
-            └── 12/  
-                ...  
+└── 2022/  
+    └── 10/  
+        ├── 10/  
+        │   ├── 5star/  
+        │   │   ├── 09-30-00-123-00-30-00/  
+        │   │   │   ├── info.csv  
+        │   │   │   ├── stream.mpeg2.ts  
+        │   │   │   └── subtitles.vtt  
+        │   │   ├── 10-00-00-124-00-60-00/  
+        │   │   │   ├── info.csv  
+        │   │   │   ├── stream.mpeg2.ts  
+        │   │   │   └── subtitles.vtt  
+        │   │   └── 11-00-00-125-00-45-00/  
+        │   │       ├── info.csv  
+        │   │       ├── stream.mpeg2.ts  
+        │   │       └── subtitles.vtt  
+        │   ├── bbcfourhd/  
+        │   │   ...  
+        │   ├── bbcnewshd/  
+        │   │   ...  
+        │   ├── bbconehd/  
+        │   │   ...  
+        │   ├── bbcthree/  
+        │   │   ...  
+        │   ├── bbctwohd/  
+        │   │   ...  
+        │   ├── cbbcshd/  
+        │   │   ...  
+        │   ├── cbeebieshd/  
+        │   │   ...  
+        │   ├── channel4/  
+        │   │   ...  
+        │   ├── citv/  
+        │   │   ...  
+        │   ├── film4/  
+        │   │   ...  
+        │   ├── five/  
+        │   │   ...  
+        │   ├── itv1/  
+        │   │   ...  
+        │   ├── itv2/  
+        │   │   ...  
+        │   ├── itv3/  
+        │   │   ...  
+        │   ├── itv4/  
+        │   │   ...  
+        │   └── more4/  
+        │       ...
+        ├── 11/  
+        │   ...  
+        └── 12/  
+            ...  
 ```
 
 
@@ -125,9 +124,40 @@ The scripts are to be driven from a server /etc/crontab, some launch at specific
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_5star.lock  ${CODE}restart_rs/script_restart_5star.sh 
 
 ##### STORA SUPPORTING SCRIPTS  
+
+    2     *     *    *    *       username      ${PYENV}  ${CODE}fetch_stora_schedule.py > /tmp/python_cron1.log 2>&1
+    */10  *     *    *    *       username      ${PYENV}  ${CODE}make_subtitles.py > /tmp/python_cron2.log 2>&1
+    */10  *     *    *    *       username      ${PYENV}  ${CODE}get_stream_info.py > /tmp/python_cron3.log 2>&1
+    */5   *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/schedule_checks.lock  ${PYENV} ${CODE}stream_schedule_checks.py > /tmp/python_cron4.log 2>&1
+    */3   *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/schedule_checks_eit.lock  ${PYENV} ${CODE}stream_schedule_checks_eit.py > /tmp/python_cron4b.log 2>&1
+    50    1     *    *    *       username      ${PYENV}  ${CODE}make_info_from_schedule.py > /tmp/python_cron5.log 2>&1
+    30    2     *    *    *       username      ${PYENV}  ${CODE}stora_channel_move_qnap04.py > /tmp/python_cron6.log 2>&1
     */1   *     *    *    *       username      ${CODE}flock_rebuild.sh  
     
 
 ### THE SCRIPTS  
 
-To follow.  
+To find out more about each of the scripts then please read the block comments at the beginning of each script, and any comments that may appear in the code that explains a function or action in the code. The code can be broken into three groups with specific functions.  
+
+##### Schedule management  
+These scripts control the creation of the EPG schedules, and also manage updating them when stream durations differ from the EPG echedule.  
+
+fetch_stora_schedule.py - https://github.com/bfidatadigipres/STORA/blob/main/code/fetch_stora_schedule.py  
+stream_schedule_checks.py - https://github.com/bfidatadigipres/STORA/blob/main/code/stream_schedule_checks.py  
+stream_schedule_checks_eit.py - https://github.com/bfidatadigipres/STORA/blob/main/code/stream_schedule_checks_eit.py  
+
+##### Stream recording  
+These scripts facilitate recording of the RTP stream for each channel. They cut up the schedule into programmes and store them into the correct date and channel paths. Folders of shell scripts manage the restarting of any channel scripts that stop running for any specific reasons.  
+
+running_status_channel_recorder.py - https://github.com/bfidatadigipres/STORA/blob/main/code/running_status_channel_recorder.py  
+Running Status script restart shell scripts - https://github.com/bfidatadigipres/STORA/blob/main/code/restart_rs/  
+epg_channel_recorder.py - https://github.com/bfidatadigipres/STORA/blob/main/code/epg_channel_recorder.py  
+EPG script restart shell scripts - https://github.com/bfidatadigipres/STORA/blob/main/code/restart_epg/  
+
+##### Ingest preparation  
+These scripts prepare the programmes for ingest to BFI National archive Digital Preservation Infrastructure by creating necessary files 'info.csv' and 'subtitles.vtt', and also by moving each day's programmes to designated NAS storage from where they are ingested.  
+
+get_stream_info.py - https://github.com/bfidatadigipres/STORA/blob/main/code/get_stream_info.py  
+make_subtitles.py - https://github.com/bfidatadigipres/STORA/blob/main/code/make_subtitles.py  
+make_info_from_schedule.py - https://github.com/bfidatadigipres/STORA/blob/main/code/make_info_from_schedule.py  
+stora_channel_move.py - https://github.com/bfidatadigipres/STORA/blob/main/code/stora_channel_move_qnap04.py  
