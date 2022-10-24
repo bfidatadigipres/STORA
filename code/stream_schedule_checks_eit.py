@@ -53,7 +53,6 @@ CONFIG_FILE = os.path.join(CODEPTH, 'stream_config.json')
 CONFIG_UDP = os.path.join(CODEPTH, 'stream_config_udp.json')
 SCHEDULES = os.path.join(CODEPTH, 'schedules/')
 SAMPLES = os.path.join(CODEPTH, 'samples/')
-STORA_CONTROL = os.path.join(CODEPTH, 'stora_control.json')
 TODAY = datetime.utcnow()
 START = TODAY.strftime('%Y-%m-%d')
 DATE_PATH = os.path.join(STORAGE_PATH, f"{START[0:4]}/{START[5:7]}/{START[8:10]}/")
@@ -85,22 +84,10 @@ CHANNELS = {'bbconehd': 'BBC One HD',
             'itv2': 'ITV2',
             'itv3': 'ITV3',
             'itv4': 'ITV4',
-            # 'channel4': 'Channel 4 HD',
+            'channel4': 'Channel 4 HD',
             # 'film4': 'Film4',
             'more4': 'More4'
 }
-
-
-def check_control():
-    '''
-    Check control JSON for script exit
-    '''
-
-    with open(STORA_CONTROL) as control:
-        j = json.load(control)
-        if not j['stora_qnap04']:
-            logging.info("Script run prevented by stora_control.json. Script exiting.")
-            sys.exit("Script run prevented by stora_control.json. Script exiting.")
 
 
 def fetch_udp(channel):
@@ -321,8 +308,6 @@ def main():
     that are no longer relevant
     '''
 
-    check_control()
-
     # Temp start for limited channel access
     for chnl in CHANNELS.keys():
         # Get paths
@@ -379,7 +364,12 @@ def main():
                 continue
             elif len(index) > 1:
                 LOGGER.warning("More than one matching time found: %s", index)
-                continue
+                first = index[0]
+                for num in index:
+                    if num == first:
+                        continue
+                    schedule.remove(schedule[num])
+                    LOGGER.info("Deleted duplicate schedule start time: %s", schedule[num])
 
             # Compare data to schedule and look for mismatch - must return [{dicts}]
             mismatched = []
