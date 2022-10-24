@@ -9,14 +9,14 @@ These scripts manage the recording of live television, accessing FreeSat using R
 
 The first uses Electronic Programme Guide (EPG) data downloaded daily from PATV Metadata Services Ltd. From this a recording schedule is generated for each channel, the script loops over this schedule starting/stopping until no more remain. Should programme's duration extend, such as for live events, scripts update new schedule timings and the recording script sees this modification time change and refreshes the recording script which alters the stop/start times accordingly.  This script runs until all items on the schedule have completed recording then exits. A new version of the script is restarted from crontab the following day just before midnight.  
 
-The second script uses the channel's UDP EIT data to download the current airing programme's EventID, and the RunningStatus number for (4 is running, 1 is not running). When an EventID changes and that programme has a RunningStatus '4' then the script stops the existing recording and starts the next. The EIT data also supplies remaining start time and duration information to assist with creating the correct folder path for the recording to be placed in. This script runs on an infite loop that can be stopped using a control.json document.  
+The second script uses the channel's UDP EIT data to download the current airing programme's EventID, and the RunningStatus number (4 is running, 1 is not running). When an EventID changes and that programme has a RunningStatus '4' then the script stops the existing recording and starts the next. The EIT data also supplies start time and duration information to assist with creating the correct folder path for the recording to be placed in. This script runs on an infite loop that can be stopped using a control.json document.  
 
 
 ### Dependencies
 
 These scripts are run from Ubuntu 20.04LTS server and rely upon various Linux command line programmes. These include: rsync, flock, pgrep, cat, echo, basename, dirname, find, date... You can find out more about these programmes by launching the manual (man rsync) or by calling the help page (rsync --help).  
 
-Several open source softwares and Python packages (in addition to Python standard library) are used. Please follow the links below for installation guidance:  
+Several open source softwares and Python packages are used, in addition to Python standard library. Please follow the links below for installation guidance:  
 FFmpeg Version 4+ - https://ffmpeg.org/  
 VLC Version 3+ - https://videolan.org  
 MediaInfo V19.09 + - https://mediaarea.net/mediainfo  
@@ -135,18 +135,18 @@ The scripts are to be driven from a server /etc/crontab, some launch at specific
     */1   *     *    *    *       username      ${CODE}flock_rebuild.sh  
     
 
-### THE SCRIPTS  
+### THE CODEBASE  
 
-To find out more about each of the scripts then please read the block comments at the beginning of each script, and any comments that may appear in the code that explains a function or action in the code. The code can be broken into three groups with specific functions.  
+To find out more about each script then please read the block comments at the beginning, and any comments that may appear in the code that explains a function or action. The codebase can be broken into four groups with specific functions:  
 
-##### Schedule management  
+#### Schedule management  
 These scripts control the creation of the EPG schedules, and also manage updating them when stream durations differ from the EPG echedule.  
 
 fetch_stora_schedule.py - https://github.com/bfidatadigipres/STORA/blob/main/code/fetch_stora_schedule.py  
 stream_schedule_checks.py - https://github.com/bfidatadigipres/STORA/blob/main/code/stream_schedule_checks.py  
 stream_schedule_checks_eit.py - https://github.com/bfidatadigipres/STORA/blob/main/code/stream_schedule_checks_eit.py  
 
-##### Stream recording  
+#### Stream recording  
 These scripts facilitate recording of the RTP stream for each channel. They cut up the schedule into programmes and store them into the correct date and channel paths. Folders of shell scripts manage the restarting of any channel scripts that stop running for any specific reasons.  
 
 running_status_channel_recorder.py - https://github.com/bfidatadigipres/STORA/blob/main/code/running_status_channel_recorder.py  
@@ -154,10 +154,20 @@ Running Status script restart shell scripts - https://github.com/bfidatadigipres
 epg_channel_recorder.py - https://github.com/bfidatadigipres/STORA/blob/main/code/epg_channel_recorder.py  
 EPG script restart shell scripts - https://github.com/bfidatadigipres/STORA/blob/main/code/restart_epg/  
 
-##### Ingest preparation  
+#### Ingest preparation  
 These scripts prepare the programmes for ingest to BFI National archive Digital Preservation Infrastructure by creating necessary files 'info.csv' and 'subtitles.vtt', and also by moving each day's programmes to designated NAS storage from where they are ingested.  
 
 get_stream_info.py - https://github.com/bfidatadigipres/STORA/blob/main/code/get_stream_info.py  
 make_subtitles.py - https://github.com/bfidatadigipres/STORA/blob/main/code/make_subtitles.py  
 make_info_from_schedule.py - https://github.com/bfidatadigipres/STORA/blob/main/code/make_info_from_schedule.py  
 stora_channel_move.py - https://github.com/bfidatadigipres/STORA/blob/main/code/stora_channel_move_qnap04.py  
+
+#### Supporting documents
+There are three supporting JSON documents required by the scripts to access the stream data, and to check if there is any requirement for actions to cease. The stream_config files will likely be combined at the next code refactoring.  
+
+stora_control.json - https://github.com/bfidatadigipres/STORA/blob/main/code/stora_control.json  
+stream_config.json - https://github.com/bfidatadigipres/STORA/blob/main/code/stream_config.json  
+stream_config_udp.json - https://github.com/bfidatadigipres/STORA/blob/main/code/stream_config_udp.json  
+
+
+Thank you! Any comments, questions or feedback happily received.
