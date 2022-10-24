@@ -237,7 +237,7 @@ def main():
             # Create info.csv and write data to it
             csv_path = os.path.join(fpath, 'info.csv')
             LOGGER.info("Writing data to: %s", csv_path)
-            write_to_csv(csv_path, match_data, actual_duration)
+            write_to_csv(csv_path, match_data)
 
         try:
             y_folders = [x for x in os.listdir(ypath) if os.path.isdir(os.path.join(ypath, x))]
