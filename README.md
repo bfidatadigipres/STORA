@@ -1,7 +1,6 @@
 ## STORA: System for Television Off-air Recording and Archiving
 
-The scripts in this repository form the off-air TV recording codebase responsible for preserving 17 UK Television channels 24 hours a day, 7 day a week. The BFI is the body designated by Ofcom (UK communications regulator) as the National Television Archive, under the provision in the Broadcasting Act, 1990. This designation allows us to record, preserve and make accessible TV off-air under section 75 (recordings for archival purposes) of the Copyright, Designs and Patents Act, 1988 and later the Copyright and Rights in Performance Regulations 2014 (under Research, Education, Libraries and Archives).
-
+The scripts in this repository form the off-air TV recording codebase responsible for recording and preserving 17 UK Television channels 24 hours a day, 7 day a week. The BFI National Archive is the body designated by Ofcom (UK communications regulator) as the National Television Archive, under the provision in the Broadcasting Act, 1990, and in that capacity we have provision to record, preserve and make accessible off-air television.
 
 ### Overview
 
