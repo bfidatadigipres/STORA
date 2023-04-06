@@ -7,9 +7,11 @@ The scripts in this repository form the off-air TV recording codebase responsibl
 
 These scripts manage the recording of live television, accessing FreeSat using Real-time Transport Protocol (RTP) for the recordings and User Datagram Protocol (UDP) to access Digital Video Broadcasting (DVB) Service Information Event Information Table (EIT). The streams have variable EIT data so two different approaches to recording the off-air content is required.  
 
-Both of these methods are now included in a single off-air recording scripts called epg_assessment_channel_record.py. The two approaches are outlined below:  
+Both of these methods are now included in a single off-air recording script called 'epg_assessment_channel_record.py'. The two approaches are outlined below:  
 - Electronic Programme Guide (EPG) data downloaded daily from PATV Metadata Services Ltd. From this a recording schedule is generated for each channel, the script loops over this schedule starting/stopping until no more remain. Should programme's duration extend, such as for live events, scripts update new schedule timings and the recording script sees this modification time change and refreshes the recording script which alters the stop/start times accordingly.  This EPG schedule recording runs until all items on the schedule have completed and only launches where the RunningStatus data cannot be found in the UDP stream.  
-- UDP EIT data is used to download the current airing programme's EventID, and the RunningStatus number (4 is running, 1 is not running). When an EventID changes and that programme has a RunningStatus '4' then the script stops the existing recording and starts the next. The EIT data also supplies start time and duration information to assist with creating the correct folder path for the recording to be placed in. This approach runs on an infite loop that can be stopped using a control.json document, or it switches to the previous EPG schedul recording method if the UDP stream data fails.  
+- UDP EIT data is used to download the current airing programme's EventID, and the RunningStatus number (4 is running, 1 is not running). When an EventID changes and that programme has a RunningStatus '4' then the script stops the existing recording and starts the next. The EIT data also supplies start time and duration information to assist with creating the correct folder path for the recording to be placed in. This approach runs on an infite loop that can be stopped using a control.json document, or it switches to the previous EPG schedule recording method if the UDP stream data fails.  
+
+The script checks the channel_timings.json document to see when a script's EIT data should be checked. This document ensures that false EIT failures are not found when a channel is not broadcasting. The script defaults to first attempting to find UDP EIT data, launching the EPG schedule method only after fifteen consective failures to reach the EIT data.  
 
 
 ### Dependencies
@@ -97,7 +99,7 @@ media/
 
 ### Supporting crontab actions  
 
-The scripts are launched from /etc/crontab. If not operating then they launch continually throughout the day with the use of Flock locks. Locks prevent the scripts from running multiple versions at once and overburdening the server. The crontab calls the scripts via Linux Flock lock files (called from /usr/bin/flock shown below). These are manually created in the /var/run folder and should be created by the username listed in the crontab. It is common for the lock files to disappear when a server is rebooted, etc so the flock_rebuild script manages the recreation of Flock files if missing. Crontab entries for recordings scripts and supporting STORA scripts:  
+The scripts are launched from /etc/crontab. The restart scripts launch each minute to check if a script is running. If not it will restart it with the use of Flock locks. Locks prevent the scripts from running multiple versions at once and overburdening the server. The crontab calls the scripts via Linux Flock lock files (called from /usr/bin/flock shown below). These are manually created in the /var/run folder and should be created by the username listed in the crontab. It is common for the lock files to disappear when a server is rebooted, etc so the flock_rebuild script manages the recreation of Flock files if missing. Crontab entries for recordings scripts and supporting STORA scripts:  
 
 ##### STORA RESTART CHECKS, EVERY MINUTE AND RESTART IF SCRIPT NOT RUNNING  
     *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbcone.lock  ${CODE}restart/script_restart.sh 'bbconehd'  
@@ -145,10 +147,9 @@ stream_schedule_checks_eit.py - https://github.com/bfidatadigipres/STORA/blob/ma
 These scripts facilitate recording of the RTP stream for each channel. They cut up the schedule into programmes and store them into the correct date and channel paths. Folders of shell scripts manage the restarting of any channel scripts that stop running for any specific reasons.  
 
 epg_assessment_channel_record.py - https://github.com/bfidatadigipres/STORA/blob/main/code/epg_assessment_channel_recorder.py  
-Script that launches recording to first check UDP data available, if absent switches to EPG schedule recording  
 Script restart shell script supplied with channel argument - https://github.com/bfidatadigipres/STORA/blob/main/code/restart/  
 
-Now deprecated:
+Now deprecated:  
 running_status_channel_recorder.py - https://github.com/bfidatadigipres/STORA/blob/main/code/running_status_channel_recorder.py  
 Running Status script restart shell scripts - https://github.com/bfidatadigipres/STORA/blob/main/code/restart_rs/  
 epg_channel_recorder.py - https://github.com/bfidatadigipres/STORA/blob/main/code/epg_channel_recorder.py  
