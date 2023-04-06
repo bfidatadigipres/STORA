@@ -5,11 +5,11 @@ The scripts in this repository form the off-air TV recording codebase responsibl
 
 ### Overview
 
-These scripts manage the recording of live television, accessing FreeSat using Real-time Transport Protocol (RTP) for the recordings and User Datagram Protocol (UDP) to access Digital Video Broadcasting (DVB) Service Information Event Information Table (EIT). The streams have variable EIT data so two different approaches to recording the off-air content are required:  
+These scripts manage the recording of live television, accessing FreeSat using Real-time Transport Protocol (RTP) for the recordings and User Datagram Protocol (UDP) to access Digital Video Broadcasting (DVB) Service Information Event Information Table (EIT). The streams have variable EIT data so two different approaches to recording the off-air content is required.  
 
-The first uses Electronic Programme Guide (EPG) data downloaded daily from PATV Metadata Services Ltd. From this a recording schedule is generated for each channel, the script loops over this schedule starting/stopping until no more remain. Should programme's duration extend, such as for live events, scripts update new schedule timings and the recording script sees this modification time change and refreshes the recording script which alters the stop/start times accordingly.  This script runs until all items on the schedule have completed recording then exits. A new version of the script is restarted from crontab the following day just before midnight.  
-
-The second script uses the channel's UDP EIT data to download the current airing programme's EventID, and the RunningStatus number (4 is running, 1 is not running). When an EventID changes and that programme has a RunningStatus '4' then the script stops the existing recording and starts the next. The EIT data also supplies start time and duration information to assist with creating the correct folder path for the recording to be placed in. This script runs on an infite loop that can be stopped using a control.json document.  
+Both of these methods are now included in a single off-air recording scripts called epg_assessment_channel_record.py. The two approaches are outlined below:  
+- Electronic Programme Guide (EPG) data downloaded daily from PATV Metadata Services Ltd. From this a recording schedule is generated for each channel, the script loops over this schedule starting/stopping until no more remain. Should programme's duration extend, such as for live events, scripts update new schedule timings and the recording script sees this modification time change and refreshes the recording script which alters the stop/start times accordingly.  This EPG schedule recording runs until all items on the schedule have completed and only launches where the RunningStatus data cannot be found in the UDP stream.  
+- UDP EIT data is used to download the current airing programme's EventID, and the RunningStatus number (4 is running, 1 is not running). When an EventID changes and that programme has a RunningStatus '4' then the script stops the existing recording and starts the next. The EIT data also supplies start time and duration information to assist with creating the correct folder path for the recording to be placed in. This approach runs on an infite loop that can be stopped using a control.json document, or it switches to the previous EPG schedul recording method if the UDP stream data fails.  
 
 
 ### Dependencies
@@ -97,31 +97,26 @@ media/
 
 ### Supporting crontab actions  
 
-The scripts are to be driven from a server /etc/crontab. Some launch once a day at a specific time and others launch continually throughout the day with the use of Flock locks. Locks prevent the scripts from running multiple versions at once and overburdening the server. The crontab calls the scripts via Linux Flock lock files (called from /usr/bin/flock shown below). These are manually created in the /var/run folder and should be created by the username listed in the crontab. It is common for the lock files to disappear when a server is rebooted, etc so the flock_rebuild script manages the recreation of Flock files if missing. Crontab entries for recordings scripts and supporting STORA scripts:  
-
-##### STORA RECORDING SCHEDULED AT MIDNIGHT EACH NIGHT  
-    58    23    *    *    *       username      ${PYENV}  ${CODE}epg_channel_recorder.py 'channel4' >> ${STORAGE_PATH}$(date --date='tomorrow' +\%Y/\%m/\%d)/channel4/recording.log 2>&1  
-    58    23    *    *    *       username      ${PYENV}  ${CODE}epg_channel_recorder.py 'film4' >> ${STORAGE_PATH}$(date --date='tomorrow' +\%Y/\%m/\%d)/film4/recording.log 2>&1  
-    58    23    *    *    *       username      ${PYENV}  ${CODE}epg_channel_recorder.py 'more4' >> ${STORAGE_PATH}$(date --date='tomorrow' +\%Y/\%m/\%d)/more4/recording.log 2>&1  
+The scripts are launched from /etc/crontab. If not operating then they launch continually throughout the day with the use of Flock locks. Locks prevent the scripts from running multiple versions at once and overburdening the server. The crontab calls the scripts via Linux Flock lock files (called from /usr/bin/flock shown below). These are manually created in the /var/run folder and should be created by the username listed in the crontab. It is common for the lock files to disappear when a server is rebooted, etc so the flock_rebuild script manages the recreation of Flock files if missing. Crontab entries for recordings scripts and supporting STORA scripts:  
 
 ##### STORA RESTART CHECKS, EVERY MINUTE AND RESTART IF SCRIPT NOT RUNNING  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbcone.lock  ${CODE}restart_rs/script_restart_bbcone.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbctwo.lock  ${CODE}restart_rs/script_restart_bbctwo.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbcthree.lock  ${CODE}restart_rs/script_restart_bbcthree.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbcfour.lock  ${CODE}restart_rs/script_restart_bbcfour.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbcnews.lock  ${CODE}restart_rs/script_restart_bbcnews.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_cbbc.lock  ${CODE}restart_rs/script_restart_cbbc.sh
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_cbeebies.lock  ${CODE}restart_rs/script_restart_cbeebies.sh  
-    *  0-23     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_channel4.lock  ${CODE}restart_epg/script_restart_channel4.sh  
-    *  0-23     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_film4.lock  ${CODE}restart_epg/script_restart_film4.sh  
-    *  0-23     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_more4.lock  ${CODE}restart_epg/script_restart_more4.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_itv1.lock  ${CODE}restart_rs/script_restart_itv1.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_itv2.lock  ${CODE}restart_rs/script_restart_itv2.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_itv3.lock  ${CODE}restart_rs/script_restart_itv3.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_itv4.lock  ${CODE}restart_rs/script_restart_itv4.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_citv.lock  ${CODE}restart_rs/script_restart_citv.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_five.lock  ${CODE}restart_rs/script_restart_five.sh  
-    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_5star.lock  ${CODE}restart_rs/script_restart_5star.sh 
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbcone.lock  ${CODE}restart/script_restart.sh 'bbconehd'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbctwo.lock  ${CODE}restart/script_restart.sh 'bbctwohd'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbcthree.lock  ${CODE}restart/script_restart.sh 'bbcthree'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbcfour.lock  ${CODE}restart/script_restart.sh 'bbcfourhd'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_bbcnews.lock  ${CODE}restart/script_restart.sh 'bbcnewshd'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_cbbc.lock  ${CODE}restart/script_restart.sh 'cbbchd'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_cbeebies.lock  ${CODE}restart/script_restart.sh 'cbeebieshd'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_channel4.lock  ${CODE}restart/script_restart.sh 'channel4'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_film4.lock  ${CODE}restart/script_restart.sh 'film4'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_more4.lock  ${CODE}restart/script_restart.sh 'more4'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_itv1.lock  ${CODE}restart/script_restart.sh 'itv1'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_itv2.lock  ${CODE}restart/script_restart.sh 'itv2'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_itv3.lock  ${CODE}restart/script_restart.sh 'itv3'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_itv4.lock  ${CODE}restart/script_restart.sh 'itv4'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_citv.lock  ${CODE}restart/script_restart.sh 'citv'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_five.lock  ${CODE}restart/script_restart.sh 'five'  
+    *     *     *    *    *       username      /usr/bin/flock -w 0 --verbose /var/run/restart_5star.lock  ${CODE}restart/script_restart.sh '5star'  
 
 ##### STORA SUPPORTING SCRIPTS  
 
@@ -149,6 +144,11 @@ stream_schedule_checks_eit.py - https://github.com/bfidatadigipres/STORA/blob/ma
 #### Stream recording  
 These scripts facilitate recording of the RTP stream for each channel. They cut up the schedule into programmes and store them into the correct date and channel paths. Folders of shell scripts manage the restarting of any channel scripts that stop running for any specific reasons.  
 
+epg_assessment_channel_record.py - https://github.com/bfidatadigipres/STORA/blob/main/code/epg_assessment_channel_recorder.py  
+Script that launches recording to first check UDP data available, if absent switches to EPG schedule recording  
+Script restart shell script supplied with channel argument - https://github.com/bfidatadigipres/STORA/blob/main/code/restart/  
+
+Now deprecated:
 running_status_channel_recorder.py - https://github.com/bfidatadigipres/STORA/blob/main/code/running_status_channel_recorder.py  
 Running Status script restart shell scripts - https://github.com/bfidatadigipres/STORA/blob/main/code/restart_rs/  
 epg_channel_recorder.py - https://github.com/bfidatadigipres/STORA/blob/main/code/epg_channel_recorder.py  
@@ -165,6 +165,7 @@ stora_channel_move.py - https://github.com/bfidatadigipres/STORA/blob/main/code/
 #### Supporting documents
 There are three supporting JSON documents required by the scripts to access the stream data, and to check if there is any requirement for actions to cease. The stream_config files will likely be combined at the next code refactoring.  
 
+channel_timings.json - https://github.com/bfidatadigipres/STORA/blob/main/code/channel_timings.json  
 stora_control.json - https://github.com/bfidatadigipres/STORA/blob/main/code/stora_control.json  
 stream_config.json - https://github.com/bfidatadigipres/STORA/blob/main/code/stream_config.json  
 stream_config_udp.json - https://github.com/bfidatadigipres/STORA/blob/main/code/stream_config_udp.json  
