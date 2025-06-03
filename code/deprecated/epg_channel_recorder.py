@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-'''
+"""
 A script to capture network streams using VLC, based on a channel schedule.
 Receives the CHANNEL information from launch command argument in crontab.
 Has to be run in virtual environment to access Tenacity & VLC Python bindings.
@@ -35,35 +35,36 @@ https://code.activestate.com/recipes/579096-vlcpy-stream-capture-scheduler-scrip
 
 Joanna White
 2022
-'''
+"""
 
+import datetime
+import json
 import os
 import sys
 import time
-import json
-import datetime
+
 import tenacity
 import vlc
 
 # Static global variables
 CHANNEL = sys.argv[1]
-FORMAT = '%Y-%m-%d %H:%M:%S'
-STR_PATH = os.environ['STORAGE_PATH']
-CODEPTH = os.environ['CODE']
-LOG_FILE = os.path.join(CODEPTH, f'logs/epg_channel_recorder_{CHANNEL}.log')
-CONFIG_FILE = os.path.join(CODEPTH, 'stream_config.json')
-SCHEDULES = os.path.join(CODEPTH, 'schedules/')
-SAMPLES = os.path.join(CODEPTH, 'samples/')
-STORA_CONTROL = os.path.join(CODEPTH, 'stora_control.json')
+FORMAT = "%Y-%m-%d %H:%M:%S"
+STR_PATH = os.environ["STORAGE_PATH"]
+CODEPTH = os.environ["CODE"]
+LOG_FILE = os.path.join(CODEPTH, f"logs/epg_channel_recorder_{CHANNEL}.log")
+CONFIG_FILE = os.path.join(CODEPTH, "stream_config.json")
+SCHEDULES = os.path.join(CODEPTH, "schedules/")
+SAMPLES = os.path.join(CODEPTH, "samples/")
+STORA_CONTROL = os.path.join(CODEPTH, "stora_control.json")
 
 
 def check_control():
-    '''
+    """
     This is a method to stop the recording when
     channel == False in STORA_CONTROl
-    '''
+    """
 
-    with open(STORA_CONTROL, 'r') as file:
+    with open(STORA_CONTROL, "r") as file:
         cjson = json.load(file)
 
     for key, val in cjson.items():
@@ -72,55 +73,55 @@ def check_control():
 
 
 def time_calc():
-    '''
+    """
     Checks if script launch is just before
     midnight or on recording day
-    '''
+    """
 
     now = str(datetime.datetime.now())
-    if ' 23:5' in now:
+    if " 23:5" in now:
         return str(datetime.date.today() + datetime.timedelta(days=1))
 
     return str(datetime.date.today())
 
 
 def write_print(text):
-    '''
+    """
     Write data to LOG_FILE
-    '''
+    """
 
-    with open(LOG_FILE, 'a') as file:
+    with open(LOG_FILE, "a") as file:
         file.write(f"{text}\n")
 
 
 def time_print(text, date_time=None):
-    '''
+    """
     Print to STDOUT with a datetime prefix. If no timestamp is provided,
     the current date and time will be used.
-    '''
+    """
 
     if date_time is None:
         now = datetime.datetime.utcnow()
-        date_time = now.strftime('%H:%M:%S')
+        date_time = now.strftime("%H:%M:%S")
 
     write_print(f"{date_time}  {text}")
 
 
 def indent_print(text):
-    '''
+    """
     Print to STDOUT with an indent matching the timestamp printout in
     time_Print(). Capture for stream logs
-    '''
+    """
 
     write_print(f"\t    {text}")
 
 
 def load_channel_config(silent=False):
-    '''
+    """
     Load the stream configuration file.
-    '''
+    """
 
-    with open(CONFIG_FILE, 'r') as file:
+    with open(CONFIG_FILE, "r") as file:
         cjson = json.load(file)
 
     for key, val in cjson.items():
@@ -135,14 +136,14 @@ def load_channel_config(silent=False):
 
 @tenacity.retry(stop=tenacity.stop_after_attempt(5))
 def load_schedule(sched_path, silent=False):
-    '''
+    """
     Load the scheduled recordings file
     Tenacity to enable retry if schedule
     presently being overwritten
-    '''
+    """
 
     try:
-        with open(sched_path, 'r') as file:
+        with open(sched_path, "r") as file:
             rjson = json.load(file)
         recordings = len(rjson)
         if not silent:
@@ -154,11 +155,11 @@ def load_schedule(sched_path, silent=False):
 
 @tenacity.retry(stop=tenacity.stop_after_attempt(5))
 def get_mod_time(mod_time_prev, date):
-    '''
+    """
     Retrieve modification time
     of current schedule, seconds since
     epoch time of file.
-    '''
+    """
 
     schedule = os.path.join(SCHEDULES, f"{CHANNEL}_schedule_{date}.json")
     mod_time = os.path.getmtime(schedule)
@@ -167,11 +168,11 @@ def get_mod_time(mod_time_prev, date):
 
 
 def parse_schedule(schedule, channels):
-    '''
+    """
     Parse the schedule and return recordings dictionary
     with one entry per programme including RTP url, channel
     start, end times, programme title and SID.
-    '''
+    """
 
     recordings = {}
     schedules = len(schedule)
@@ -180,33 +181,33 @@ def parse_schedule(schedule, channels):
         entry = schedule[jsn]
 
         # Recording start time
-        start = entry['start']
+        start = entry["start"]
         date_time = datetime.datetime.strptime(start, FORMAT)
-        channel = entry['channel']
+        channel = entry["channel"]
 
         # Get programme name
         programme = None
 
-        if 'programme' in entry:
-            programme = entry['programme']
+        if "programme" in entry:
+            programme = entry["programme"]
 
-        address = ''
+        address = ""
         for key, val in channels.items():
             if key == CHANNEL:
                 address = val
 
-        address_split = address.split(',')
+        address_split = address.split(",")
         pid = f"{start} {channel}"
 
         # Check for an endtime or a duration
         endtime = None
         offset = None
 
-        if 'end' in entry:
-            endtime = datetime.datetime.strptime(entry['end'], FORMAT)
+        if "end" in entry:
+            endtime = datetime.datetime.strptime(entry["end"], FORMAT)
 
-        if 'duration' in entry:
-            duration = entry['duration']
+        if "duration" in entry:
+            duration = entry["duration"]
             offset = date_time + datetime.timedelta(minutes=duration)
 
         # Check to see which gives the longer recording - the duration or end timestamp
@@ -219,37 +220,41 @@ def parse_schedule(schedule, channels):
 
         elif endtime is None and offset is None:
             # No valid duration/end time in JSON schedule try stream 'now'/'next' duration retrieval
-            write_print(f"End or duration missing for scheduled recording {date_time} ({channel}).")
+            write_print(
+                f"End or duration missing for scheduled recording {date_time} ({channel})."
+            )
             continue
 
         elif endtime is not None and endtime < date_time:
             # End is earlier than the start!
-            write_print(f"End timestamp earlier than start! Cannot record {date_time} ({channel}).")
+            write_print(
+                f"End timestamp earlier than start! Cannot record {date_time} ({channel})."
+            )
 
         recordings[pid] = {
-            'url': address_split[0],
-            'channel': channel,
-            'start': date_time,
-            'duration': duration,
-            'end': endtime,
-            'programme': programme,
-            'sid': address_split[1]
+            "url": address_split[0],
+            "channel": channel,
+            "start": date_time,
+            "duration": duration,
+            "end": endtime,
+            "programme": programme,
+            "sid": address_split[1],
         }
 
     return recordings
 
 
 def initialise_ts(chnl_path, start_time, duration):
-    '''
+    """
     Uses programme start time and duration to
     build a new programme folder in chnl_path directory.
     Returns path for new stream.mpeg2.ts file.
-    '''
+    """
 
     start_str = start_time.strftime(FORMAT)
-    start = start_str[11:].replace(':', '-')
+    start = start_str[11:].replace(":", "-")
     seconds = duration * 60
-    dur = time.strftime('%H-%M-%S', time.gmtime(seconds))
+    dur = time.strftime("%H-%M-%S", time.gmtime(seconds))
     dur = str(dur)
 
     # Folder creation for new mpeg file
@@ -258,18 +263,20 @@ def initialise_ts(chnl_path, start_time, duration):
         os.makedirs(os.path.join(chnl_path, fname))
         print(f"Created new directory {fname}")
 
-    return os.path.join(chnl_path, fname, 'stream.mpeg2.ts')
+    return os.path.join(chnl_path, fname, "stream.mpeg2.ts")
 
 
 def record_stream(instream, outfile):
-    '''
+    """
     Record the network stream to the output file.
     Create VLC instance that creates demuxdump-append
     to stream, in case recording is a restart.
-    '''
+    """
 
-    inst = vlc.Instance('-vv', '--demux=dump', f"--demuxdump-file={outfile}", "--demuxdump-append")
-    player = inst.media_player_new() # Create a player instance
+    inst = vlc.Instance(
+        "-vv", "--demux=dump", f"--demuxdump-file={outfile}", "--demuxdump-append"
+    )
+    player = inst.media_player_new()  # Create a player instance
     media = inst.media_new(instream)
     media.get_mrl()
     player.set_media(media)
@@ -278,39 +285,39 @@ def record_stream(instream, outfile):
 
 @tenacity.retry(stop=tenacity.stop_after_attempt(5))
 def initialise(sched_path, silent=False):
-    '''
+    """
     Load the channel list and scheduled recordings.
     Tenacity to manage moments when schedule absent.
-    '''
+    """
 
-    channels = load_channel_config(silent) # Get the available channels
-    schedule = load_schedule(sched_path, silent) # Get the schedule
-    recordings = parse_schedule(schedule, channels) # Parse the schedule information
+    channels = load_channel_config(silent)  # Get the available channels
+    schedule = load_schedule(sched_path, silent)  # Get the schedule
+    recordings = parse_schedule(schedule, channels)  # Parse the schedule information
 
     if recordings:
         return recordings
 
 
 def reload_schedule(sched_path, existing, running):
-    '''
+    """
     Schedule reload only necessary if schedule
     checks scripts have updated recordings based
     on new duration timings
-    '''
+    """
 
-    now = datetime.datetime.utcnow() # Get the current timestamp
-    revised = initialise(sched_path, True) # Get the revised schedule silently
+    now = datetime.datetime.utcnow()  # Get the current timestamp
+    revised = initialise(sched_path, True)  # Get the revised schedule silently
 
     # Get the schedule id for each of the running recordings
     running_ids = {}
     for runs in running:
-        sid = running[runs]['sid']
+        sid = running[runs]["sid"]
         running_ids[sid] = runs
 
     # Get the schedule id for each of the upcoming recordings
     upcoming_ids = {}
     for item in existing:
-        sid = existing[item]['sid']
+        sid = existing[item]["sid"]
         upcoming_ids[sid] = item
 
     # Number of new entries
@@ -319,29 +326,31 @@ def reload_schedule(sched_path, existing, running):
     # Compare the revised schedule against the existing
     for revs in revised:
         data = revised[revs]
-        sched_id = data['sid']
-        endtime = data['end']
+        sched_id = data["sid"]
+        endtime = data["end"]
 
         # If this recording is already running
         if sched_id in running_ids:
             handle = running_ids[sched_id]
 
             # Check if it's the same channel and programme
-            chnl = (data['channel'] == running[handle]['channel'])
-            prog = (data['programme'] == running[handle]['programme'])
+            chnl = data["channel"] == running[handle]["channel"]
+            prog = data["programme"] == running[handle]["programme"]
 
             # If it's the same channel and programme, check if we need to revise the end time
-            if prog and chnl and endtime != running[handle]['end']:
-                time_print('Changed end time for running recording:')
+            if prog and chnl and endtime != running[handle]["end"]:
+                time_print("Changed end time for running recording:")
 
-                if data['programme'] is not None:
+                if data["programme"] is not None:
                     indent_print(f"{data}(programme)s ({data}(channel)s)")
                 else:
                     indent_print(f"{handle}")
 
-                indent_print(f"{running[handle]['end'].strftime(FORMAT)} to {endtime.strftime(FORMAT)}")
+                indent_print(
+                    f"{running[handle]['end'].strftime(FORMAT)} to {endtime.strftime(FORMAT)}"
+                )
 
-                running[handle]['end'] = endtime
+                running[handle]["end"] = endtime
 
         # Otherwise, it's not a currently-running recording
         # We only want to consider programmes that haven't finished yet
@@ -353,14 +362,14 @@ def reload_schedule(sched_path, existing, running):
                 temp = existing.pop(ids, None)
 
                 # Check if it's the same channel and programme
-                chnl = (data['channel'] == temp['channel'])
-                prog = (data['programme'] == temp['programme'])
+                chnl = data["channel"] == temp["channel"]
+                prog = data["programme"] == temp["programme"]
 
                 # Only notify a change if it's the same programme
-                if temp != data and chnl and (prog or temp['programme'] is None):
-                    time_print('Changes made to scheduled recording:')
+                if temp != data and chnl and (prog or temp["programme"] is None):
+                    time_print("Changes made to scheduled recording:")
 
-                    if data['programme'] is not None:
+                    if data["programme"] is not None:
                         indent_print("{data}(programme)s ({data}(channel)s)")
                     else:
                         indent_print(f"{ids}")
@@ -377,11 +386,11 @@ def reload_schedule(sched_path, existing, running):
 
 
 def main():
-    '''
+    """
     Launches just before midnight with tomorrows's date from cron
     to select correct schedule. Iterates through continually until
     no schedule entries remain. Exits upon completion.
-    '''
+    """
 
     if len(sys.argv) != 2:
         time_print("Missing channel argument. Script cannot run!")
@@ -414,15 +423,15 @@ def main():
         hs = handles.keys()
         for h in hs:
             data = handles[h]
-            end = data['end']
-            channel = data['channel']
-            programme = data['programme']
+            end = data["end"]
+            channel = data["channel"]
+            programme = data["programme"]
             if now > end:
                 time_print(f"Finished recording {programme} ({channel}).")
                 try:
-                    data['player'].stop() # Stop playback
-                    data['player'].release() # Close the player
-                    data['inst'].release() # Destroy the instance
+                    data["player"].stop()  # Stop playback
+                    data["player"].release()  # Close the player
+                    data["inst"].release()  # Destroy the instance
                     handles_deleted.append(h)
                 except Exception as err:
                     time_print("Unable to destroy player reference due to error:")
@@ -438,12 +447,12 @@ def main():
         # Loop through the schedule
         rs = recordings.keys()
         for r in rs:
-            data = recordings[r] # Schedule entry details
-            start = data['start']
-            duration = data['duration']
-            end = data['end']
-            channel = data['channel']
-            programme = data['programme']
+            data = recordings[r]  # Schedule entry details
+            start = data["start"]
+            duration = data["duration"]
+            end = data["end"]
+            channel = data["channel"]
+            programme = data["programme"]
             # If we're not recording the stream but we're between the
             # start and end times for the programme, record it
 
@@ -452,17 +461,17 @@ def main():
                     # Determine a suitable output filename
                     fn = initialise_ts(chnl_path, start, duration)
                     # Create the VLC instance and player
-                    (inst, player, media) = record_stream(data['url'], fn)
+                    (inst, player, media) = record_stream(data["url"], fn)
 
                     # Store the handle to the VLC instance and relevant data
                     handles[r] = {
-                        'inst': inst,
-                        'player': player,
-                        'media': media,
-                        'end': end,
-                        'programme': programme,
-                        'channel': channel,
-                        'sid': data['sid']
+                        "inst": inst,
+                        "player": player,
+                        "media": media,
+                        "end": end,
+                        "programme": programme,
+                        "channel": channel,
+                        "sid": data["sid"],
                     }
 
                     # Start the stream and hence the recording
@@ -508,5 +517,5 @@ def main():
             sys.exit("stora_control.json requests script exits")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
