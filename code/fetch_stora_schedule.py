@@ -49,17 +49,17 @@ END3 = f'{TOM3}T23:59:00'
 START4 = f'{TOM4}T00:00:00'
 END4 = f'{TOM4}T23:59:00'
 # If a different date period needs targeting use:
-#START1 = '2022-03-16T00:00:00'
-#END1 = '2022-03-16T23:59:00'
+#START1 = '2024-11-05T00:00:00'
+#END1 = '2024-11-05T23:59:00'
 
 # Global path variables
 FORMAT = '%Y-%m-%d'
-STORAGE_PATH = os.environ['STORAGE_PATH']
-CODEPTH = os.environ['CODE']
-COMPLETE_PTH = os.environ['STORA_COMPLETE']
-SCHEDULE_PATH = os.path.join(CODEPTH, 'schedules/')
+STORAGE_PATH = os.environ.get('STORAGE_PATH')
+FOLDERS = os.environ.get('STORA_FOLDERS')
+COMPLETE_PTH = os.environ.get('STORA_COMPLETE')
+SCHEDULE_PATH = os.path.join(FOLDERS, 'schedules/')
 COMPLETED = os.path.join(COMPLETE_PTH, 'schedules/')
-LOG_FILE = os.path.join(CODEPTH, 'logs/fetch_stora_schedule.log')
+LOG_FILE = os.path.join(FOLDERS, 'logs/fetch_stora_schedule.log')
 
 # TARGET DATE PATHS
 DATE_PATH1 = START1[0:4] + "/" + START1[5:7] + "/" + START1[8:10]
@@ -96,12 +96,12 @@ CHANNEL = {
     "itv2": os.environ['PA_ITV2'],
     "itv3": os.environ['PA_ITV3'],
     "itv4": os.environ['PA_ITV4'],
-    "citv": os.environ['PA_CITV'],
     "channel4": os.environ['PA_CHANNEL4'],
     "more4": os.environ['PA_MORE4'],
     "film4": os.environ['PA_FILM4'],
     "five": os.environ['PA_FIVE'],
-    "5star": os.environ['PA_5STAR']
+    "5star": os.environ['PA_5STAR'],
+    "e4": os.environ['PA_E4']
 }
 
 
@@ -110,6 +110,7 @@ def fetch(value, pth):
     '''
     Retrieval of EPG metadata dependent on date
     '''
+    print(value, pth)
     if pth[-2:] == START1[8:10]:
         start, end = START1, END1
     elif pth[-2:] == START2[8:10]:
@@ -122,11 +123,13 @@ def fetch(value, pth):
         return None
     try:
         params = {"channelId": f"{value}", "start": start, "end": end, "aliases": "True"}
-        req = requests.request("GET", URL, headers=HEADERS, params=params, timeout=12)
+        print(params)
+        req = requests.request("GET", URL, headers=HEADERS, params=params, timeout=1200)
+        print(req.text, params)
         dct = json.loads(req.text)
         return dct
-    except Exception:
-        print("fetch(): **** PROBLEM: Cannot fetch EPG metadata. Tenacity will retry every 60 seconds")
+    except Exception as err:
+        print(f"fetch(): {err} **** PROBLEM: Cannot fetch EPG metadata. Tenacity will retry every 60 seconds")
         logging.critical("**** PROBLEM: Cannot fetch EPG metadata. Tenacity will retry every 60 second")
         return None
 
@@ -219,6 +222,7 @@ def retrieve_dct_data(key, pth, dct=None):
     '''
     Check if DCT data is None, if not instigate json_split
     '''
+
     if dct is None:
         logging.critical("FAILED: Multiple attempt to retrieve metadata. Script exiting.")
         return False
