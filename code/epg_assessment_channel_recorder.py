@@ -123,7 +123,7 @@ def channel_timings(chnl):
 
     start = f"{str(datetime.date.today())} {start_time}"
     start_dt = datetime.datetime.strptime(start, FORMAT)
-    end_dt = start_dt + datetime.timedelta(hours=int(duration))
+    end_dt = start_dt + datetime.timedelta(minutes=int(duration))
     return start_dt, end_dt
 
 
@@ -221,6 +221,10 @@ def load_schedule(sched_path, silent=False):
     presently being overwritten
     '''
 
+    try:
+        os.chmod(sched_path, 0o777)
+    except OSError as err:
+        write_print(f"Unable to modify permissions: {sched_path}\n{err}")
     try:
         with open(sched_path, 'r') as file:
             rjson = json.load(file)
@@ -423,7 +427,6 @@ def main():
     rtp = fetch_rtp()
     udp = fetch_udp()
     start_rec, end_rec = channel_timings(CHANNEL)
-    print(rtp, udp, start_rec, end_rec)
     active = True
     event_list = []
     eit_fail = 0
@@ -433,6 +436,7 @@ def main():
         # Fetch events from channel's UDP EIT table
         events = get_events(udp)
         if not events:
+            time_print(f"Failed to retrieve events - times: {eit_fail}", False)
             if start_rec <= datetime.datetime.now() <= end_rec:
                 eit_fail += 1
             # Look for 15 consistent failures
@@ -455,7 +459,6 @@ def main():
 
         # Separate to running(4)/not_running(1)
         running, not_running = read_eit(events)
-
         # Stop event_list getting big, delete first
         if len(event_list) > 5:
             del event_list[0]
@@ -566,6 +569,7 @@ def launch_epg():
             # start and end times for the programme, record it
 
             if r not in handles and (now > start):
+                print(f"if {now} < {end}")
                 if now < end:
                     # Determine a suitable output filename
                     fn = initialise_ts(chnl_path, start, duration, first)
@@ -635,17 +639,18 @@ def get_events(udp):
     cmd = [
         DVBTEE,
         '-i', udp,
-        '-t2', '-j'
+        '-t', '6', '-j'
     ]
     try:
-        capture = subprocess.check_output(cmd, timeout=6, stderr=subprocess.STDOUT)
-    except Exception as exc:
-        print(exc)
+        capture = subprocess.check_output(cmd, timeout=15, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as exc:
+        time_print(f"Failed to retrive DVBTEE:\n{exc}")
         return None
 
     capture = capture.decode('latin1').splitlines()
     data = [ x for x in capture if x.startswith('NET_SVC_ID#') ]
     if not data:
+        time_print(f"Failed to capture data from UDP:\n{capture}", False)
         return None
 
     try:
@@ -655,6 +660,10 @@ def get_events(udp):
         jdata = ast.literal_eval(split_data_clean)
         return jdata
     except IndexError as exc:
+        raise Exception from exc
+    except SyntaxError as exc:
+        raise Exception from exc
+    except Exception as exc:
         raise Exception from exc
 
 
