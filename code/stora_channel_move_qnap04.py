@@ -19,8 +19,9 @@ main():
    designated storage of programme folder and
    all contents. Deletes all files from local
    storage.
+5. Runs through all month path to clean up
+   empty folders.
 
-Joanna White
 2022
 '''
 
@@ -36,23 +37,22 @@ import subprocess
 STORAGE_PATH = os.environ['STORAGE_PATH']
 CODEPTH = os.environ['CODE']
 STORA_PTH = os.environ['STORA_PATH']
-LOG_FILE = os.path.join(CODEPTH, 'logs/stora_channel_move_qnap04.log')
+FOLDERS = os.environ['STORA_FOLDERS']
+LOG_FILE = os.path.join(FOLDERS, 'logs/stora_channel_move_qnap04.log')
 CONFIG_FILE = os.path.join(CODEPTH, 'stream_config.json')
 STORA_CONTROL = os.path.join(CODEPTH, 'stora_control.json')
 RSYNC_LOG = os.environ['RSYNC_LOGS']
 
 # Date variables
 TODAY = datetime.now()
-YEST = TODAY - timedelta(1)
+YEST = TODAY - timedelta(2)
 YESTERDAY = int(YEST.strftime('%d'))
 DATE_PATH = os.path.join(STORAGE_PATH, f"{str(YEST)[:4]}/{str(YEST)[5:7]}/{str(YEST)[8:10]}/")
+MONTH_PATH = os.path.join(STORAGE_PATH, f"{str(YEST)[:4]}/{str(YEST)[5:7]}/")
 STORA = os.path.join(STORA_PTH, f"{str(YEST)[:4]}/{str(YEST)[5:7]}/{str(YEST)[8:10]}/")
-# DATE_PATH = os.path.join(STORAGE_PATH, "2022/10/03/")
-# STORA = os.path.join(STORA_PTH, "2022/10/03/")
 
 # Setup logging
-logging.basicConfig(filename=LOG_FILE, filemode='a', \
-                    format='%(asctime)s\t%(levelname)s\t%(message)s', level=logging.INFO)
+logging.basicConfig(filename=LOG_FILE, filemode='a', format='%(asctime)s\t%(levelname)s\t%(message)s', level=logging.INFO)
 
 CHANNELS = [
     'bbconehd',
@@ -63,7 +63,6 @@ CHANNELS = [
     'cbbchd',
     'cbeebieshd',
     'channel4',
-    'citv',
     'film4',
     'five',
     '5star',
@@ -71,7 +70,8 @@ CHANNELS = [
     'itv2',
     'itv3',
     'itv4',
-    'more4'
+    'more4',
+    'e4'
 ]
 
 
@@ -94,6 +94,7 @@ def main():
     '''
 
     check_control()
+    print(STORA)
     for chnl in CHANNELS:
         fpath = os.path.join(DATE_PATH, chnl)
         if not os.path.exists(fpath):
@@ -140,7 +141,7 @@ def rsync(fpath1, fpath2, chnl):
     new_log.touch(exist_ok=True)
 
     rsync_cmd = [
-        'rsync', '--remove-source-files', '-acrvvh',
+        'rsync', '--remove-source-files', '-arvvh',
         '--info=FLIST2,COPY2,PROGRESS2,NAME2,BACKUP2,STATS2',
         '--perms', '--chmod=a+rwx',
         '--no-owner', '--no-group', '--ignore-existing',
@@ -153,6 +154,13 @@ def rsync(fpath1, fpath2, chnl):
         subprocess.call(rsync_cmd)
     except Exception as err:
         logging.error("rsync(): Move command failure! %s", err, exc_info=True)
+
+    with open(new_log) as file:
+        data = [ x for x in file.readlines() if 'sender removed' in str(x) ]
+        if len(data) > 2:
+            logging.info("Files written successfully to QNAP-04, and deleted source files.")
+        else:
+            logging.info("No Rsync copy/deletion made, check log: %s", log_path)
 
 
 if __name__ == "__main__":
