@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-'''
+"""
 Script that creates subtitle.vtt files using
 ccextractor to remove data from each mpeg_ts stream
 
@@ -11,10 +11,10 @@ main():
    If not, make subtitles.vtt from stream.mpeg2.ts
 
 2022
-'''
+"""
 
-import os
 import logging
+import os
 import subprocess
 from datetime import datetime, timedelta
 
@@ -27,8 +27,12 @@ CONFIG_FILE = os.path.join(CODEPTH, 'stream_config.json')
 SCHEDULES = os.path.join(FOLDERS, 'schedules/')
 TODAY = datetime.now()
 YEST = TODAY - timedelta(1)
-DATE_PATH = os.path.join(STORAGE_PATH, f"{str(TODAY)[0:4]}/{str(TODAY)[5:7]}/{str(TODAY)[8:10]}/")
-YEST_PATH = os.path.join(STORAGE_PATH, f"{str(YEST)[0:4]}/{str(YEST)[5:7]}/{str(YEST)[8:10]}/")
+DATE_PATH = os.path.join(
+    STORAGE_PATH, f"{str(TODAY)[0:4]}/{str(TODAY)[5:7]}/{str(TODAY)[8:10]}/"
+)
+YEST_PATH = os.path.join(
+    STORAGE_PATH, f"{str(YEST)[0:4]}/{str(YEST)[5:7]}/{str(YEST)[8:10]}/"
+)
 TODAY_DATE = f"{str(TODAY)[0:4]}-{str(TODAY)[5:7]}-{str(TODAY)[8:10]}"
 YEST_DATE = f"{str(YEST)[0:4]}-{str(YEST)[5:7]}-{str(YEST)[8:10]}"
 
@@ -62,39 +66,37 @@ CHANNELS = [
 
 
 def get_end_time(folder, date):
-    '''
+    """
     Cut up folder start time/duration
     and return as datetime object
-    '''
+    """
 
     tm = folder[0:8]
     duration = folder[-8:]
     print(f"{tm} ---- {duration}")
     dt_str = f"{date} {tm}"
     dt_start = datetime.strptime(dt_str, FORMAT)
-    h, m, s = duration.split('-')
-    minutes = int(timedelta(hours=int(h), minutes=int(m), seconds=int(s)).total_seconds()) / 60
+    h, m, s = duration.split("-")
+    minutes = (
+        int(timedelta(hours=int(h), minutes=int(m), seconds=int(s)).total_seconds())
+        / 60
+    )
 
     return dt_start + timedelta(minutes=minutes)
 
 
 def make_vtt(filepath, folder):
-    '''
+    """
     Use subprocess to create VTT file
-    '''
+    """
     try:
         os.chmod(filepath, 0o777)
     except OSError as err:
         print(err)
 
-    outpath = os.path.join(folder, 'subtitles.vtt')
+    outpath = os.path.join(folder, "subtitles.vtt")
 
-    cmd = [
-        'ccextractor',
-        '-out=webvtt',
-        filepath,
-        '-o', outpath
-    ]
+    cmd = ["ccextractor", "-out=webvtt", filepath, "-o", outpath]
 
     try:
         subprocess.call(cmd)
@@ -104,12 +106,12 @@ def make_vtt(filepath, folder):
 
 
 def main():
-    '''
+    """
     Iterate today's/yesterday's redux paths looking
     for folders that have end times > now time
     Where found create subtitles.vtt if not
     already present.
-    '''
+    """
     LOGGER.info("MAKE SUBTITLES START ==============================")
 
     for chnl in CHANNELS:
@@ -117,7 +119,9 @@ def main():
         ypath = os.path.join(YEST_PATH, chnl)
         if not os.path.exists(spath):
             continue
-        s_folders = [x for x in os.listdir(spath) if os.path.isdir(os.path.join(spath, x))]
+        s_folders = [
+            x for x in os.listdir(spath) if os.path.isdir(os.path.join(spath, x))
+        ]
         LOGGER.info("Working in channel: %s", chnl)
         for folder in s_folders:
             fpath = os.path.join(spath, folder)
@@ -127,19 +131,21 @@ def main():
             LOGGER.info("Broadcast end: %s", datetime.strftime(dt_end, FORMAT))
             if now > dt_end:
                 files = os.listdir(fpath)
-                if 'subtitles.vtt' in files:
+                if "subtitles.vtt" in files:
                     LOGGER.info("SKIPPING: Subtitle already exists")
                     continue
-                if 'stream.mpeg2.ts' in files:
+                if "stream.mpeg2.ts" in files:
                     LOGGER.info("Passed end time for broadcast, creating subtitles")
-                    streampath = os.path.join(fpath, 'stream.mpeg2.ts')
+                    streampath = os.path.join(fpath, "stream.mpeg2.ts")
                     status = make_vtt(streampath, fpath)
                     if status:
                         LOGGER.info("Successfully created subtitle.vtt file")
 
         if not os.path.exists(ypath):
             continue
-        y_folders = [x for x in os.listdir(ypath) if os.path.isdir(os.path.join(ypath, x))]
+        y_folders = [
+            x for x in os.listdir(ypath) if os.path.isdir(os.path.join(ypath, x))
+        ]
         LOGGER.info("Working in channel: %s", chnl)
         for folder in y_folders:
             fpath = os.path.join(ypath, folder)
@@ -149,12 +155,12 @@ def main():
             LOGGER.info("Broadcast end: %s", datetime.strftime(dt_end, FORMAT))
             if now > dt_end:
                 files = os.listdir(fpath)
-                if 'subtitles.vtt' in files:
+                if "subtitles.vtt" in files:
                     LOGGER.info("SKIPPING: Subtitle already exists")
                     continue
-                if 'stream.mpeg2.ts' in files:
+                if "stream.mpeg2.ts" in files:
                     LOGGER.info("Passed end time for broadcast, creating subtitles")
-                    streampath = os.path.join(fpath, 'stream.mpeg2.ts')
+                    streampath = os.path.join(fpath, "stream.mpeg2.ts")
                     status = make_vtt(streampath, fpath)
                     if status:
                         LOGGER.info("Successfully created subtitle.vtt file")
@@ -162,5 +168,5 @@ def main():
     LOGGER.info("MAKE SUBTITLES END ==============================\ns")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

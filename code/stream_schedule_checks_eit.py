@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-'''
+"""
 Script to check stream now/next information
 and update schedule if changes occur.
 
@@ -34,15 +34,16 @@ main():
    and the new dictionary data is overwritten.
 
 2022
-'''
+"""
 
-import os
 import ast
 import json
-import time
 import logging
+import os
 import subprocess
+import time
 from datetime import datetime, timedelta
+
 import tenacity
 
 # Static global variables
@@ -53,13 +54,13 @@ CONFIG_FILE = os.path.join(CODEPTH, 'stream_config.json')
 CONFIG_UDP = os.path.join(CODEPTH, 'stream_config_udp.json')
 SCHEDULES = os.path.join(FOLDERS, 'schedules/')
 TODAY = datetime.utcnow()
-START = TODAY.strftime('%Y-%m-%d')
+START = TODAY.strftime("%Y-%m-%d")
 DATE_PATH = os.path.join(STORAGE_PATH, f"{START[0:4]}/{START[5:7]}/{START[8:10]}/")
 DATE = f"{START[0:4]}-{START[5:7]}-{START[8:10]}"
-FORMAT = '%Y-%m-%d %H:%M:%S'
-FDATE = '%Y-%m-%d'
-FTIME = '%H-%M-%S'
-DVBTEE = os.environ['DVBTEE']
+FORMAT = "%Y-%m-%d %H:%M:%S"
+FDATE = "%Y-%m-%d"
+FTIME = "%H-%M-%S"
+DVBTEE = os.environ["DVBTEE"]
 
 # Setup logging / yet to be implemented
 LOGGER = logging.getLogger('stream_schedule_checks')
@@ -90,11 +91,11 @@ CHANNELS = {'bbconehd': 'BBC One HD',
 
 
 def fetch_udp(channel):
-    '''
+    """
     Return UDP stream for channel
-    '''
+    """
 
-    with open(CONFIG_UDP, 'r') as file:
+    with open(CONFIG_UDP, "r") as file:
         cjson = json.load(file)
 
     for key, val in cjson.items():
@@ -104,20 +105,16 @@ def fetch_udp(channel):
 
 @tenacity.retry(stop=tenacity.stop_after_attempt(5))
 def get_events(udp):
-    '''
+    """
     Dump libdvbtee EIT data to dict
     then pass back to main
-    '''
+    """
 
-    cmd = [
-        DVBTEE,
-        '-i', udp,
-        '-t5', '-j'
-    ]
+    cmd = [DVBTEE, "-i", udp, "-t5", "-j"]
 
     capture = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-    capture = capture.decode('latin1').splitlines()
-    data = [x for x in capture if x.startswith('NET_SVC_ID#')]
+    capture = capture.decode("latin1").splitlines()
+    data = [x for x in capture if x.startswith("NET_SVC_ID#")]
 
     if not data:
         print("Problem with data retrieved")
@@ -127,9 +124,9 @@ def get_events(udp):
         return None
     else:
         try:
-            split_d = data[0].split(': [')[1].rstrip(']')
-            split_data = split_d.replace(':false,', ':False,')
-            split_data_clean = split_data.replace(':true,', ':True,')
+            split_d = data[0].split(": [")[1].rstrip("]")
+            split_data = split_d.replace(":false,", ":False,")
+            split_data_clean = split_data.replace(":true,", ":True,")
             jdata = ast.literal_eval(split_data_clean)
             return jdata
         except IndexError as err:
@@ -138,95 +135,113 @@ def get_events(udp):
 
 
 def read_eit(events):
-    '''
+    """
     Search through event data
     clean up title, description entries
     then return dictionaries for running
     and not running entries
-    '''
+    """
 
     running = {}
     not_running = {}
 
     for num in range(0, 2):
         try:
-            event_id = events['events'][num]['eventId']
+            event_id = events["events"][num]["eventId"]
         except (IndexError, KeyError, TypeError):
-            event_id = ''
+            event_id = ""
         try:
-            title = events['events'][num]['descriptors'][0]['name']
-            title = title.replace('\x86', '')
-            title = title.replace('\x87', '')
-            title = title.replace('Â', '')
+            title = events["events"][num]["descriptors"][0]["name"]
+            title = title.replace("\x86", "")
+            title = title.replace("\x87", "")
+            title = title.replace("Â", "")
         except (IndexError, KeyError, TypeError):
-            title = ''
+            title = ""
         try:
-            desc = events['events'][num]['descriptors'][0]['text']
-            desc = desc.replace('\x86', '')
-            desc = desc.replace('\x87', '')
-            desc = desc.replace('Â', '')
+            desc = events["events"][num]["descriptors"][0]["text"]
+            desc = desc.replace("\x86", "")
+            desc = desc.replace("\x87", "")
+            desc = desc.replace("Â", "")
         except (IndexError, KeyError, TypeError):
-            desc = ''
+            desc = ""
         try:
-            run_stat = events['events'][num]['runningStatus']
+            run_stat = events["events"][num]["runningStatus"]
         except (IndexError, KeyError, TypeError):
-            run_stat = ''
+            run_stat = ""
         try:
-            ts_start = events['events'][num]['unixTimeBegin']
+            ts_start = events["events"][num]["unixTimeBegin"]
             start = datetime.utcfromtimestamp(ts_start).strftime(FTIME)
         except (IndexError, KeyError, TypeError):
-            ts_start = ''
+            ts_start = ""
         try:
-            ts_end = events['events'][num]['unixTimeEnd']
+            ts_end = events["events"][num]["unixTimeEnd"]
             end = datetime.utcfromtimestamp(ts_end).strftime(FTIME)
         except (IndexError, KeyError, TypeError):
-            ts_end = ''
+            ts_end = ""
 
         if ts_end and ts_start:
             seconds = int(ts_end) - int(ts_start)
             duration = str(time.strftime(FTIME, time.gmtime(seconds)))
         else:
-            duration = ''
-        if str(run_stat) == '4':
-            running[event_id] = f"{duration}, {start}, {end}, {run_stat}, {title}, {desc}"
-        if str(run_stat) == '1':
-            not_running[event_id] = f"{duration}, {start}, {end}, {run_stat}, {title}, {desc}"
+            duration = ""
+        if str(run_stat) == "4":
+            running[event_id] = (
+                f"{duration}, {start}, {end}, {run_stat}, {title}, {desc}"
+            )
+        if str(run_stat) == "1":
+            not_running[event_id] = (
+                f"{duration}, {start}, {end}, {run_stat}, {title}, {desc}"
+            )
 
     return running, not_running
 
 
 def configure_duration(duration):
-    '''
+    """
     Take %H-%M-%S duration
     convert to integer minutes
-    '''
+    """
 
-    hour, mins, sec = duration.split('-')
-    minutes = int(timedelta(hours=int(hour), minutes=int(mins), seconds=int(sec)).total_seconds()) // 60
+    hour, mins, sec = duration.split("-")
+    minutes = (
+        int(
+            timedelta(
+                hours=int(hour), minutes=int(mins), seconds=int(sec)
+            ).total_seconds()
+        )
+        // 60
+    )
     return minutes
 
 
 def get_datetime(folder, date):
-    '''
+    """
     Cut up folder start time/duration
     and return as datetime object
-    '''
+    """
 
     tm = folder[0:8]
-    tm = tm.replace('-', ':')
+    tm = tm.replace("-", ":")
     duration = folder[-8:]
     dt_str = f"{date} {tm}"
     dt_start = datetime.strptime(dt_str, FORMAT)
-    hour, mins, sec = duration.split('-')
-    minutes = int(timedelta(hours=int(hour), minutes=int(mins), seconds=int(sec)).total_seconds()) / 60
+    hour, mins, sec = duration.split("-")
+    minutes = (
+        int(
+            timedelta(
+                hours=int(hour), minutes=int(mins), seconds=int(sec)
+            ).total_seconds()
+        )
+        / 60
+    )
 
     return dt_start + timedelta(minutes=minutes)
 
 
 def open_schedule(schedule_path):
-    '''
+    """
     Open schedule and return as list of dicts
-    '''
+    """
 
     with open(schedule_path) as json_file:
         data = json.load(json_file)
@@ -234,13 +249,13 @@ def open_schedule(schedule_path):
 
 
 def check_for_match(sched_dict, utc_title, utc_time, utc_dur, chnl):
-    '''
+    """
     Check for matching data in key, values of sched_dict
-    '''
+    """
 
-    s_dur = sched_dict.get('duration')
-    s_chnl = sched_dict.get('channel')
-    s_prog = sched_dict.get('programme')
+    s_dur = sched_dict.get("duration")
+    s_chnl = sched_dict.get("channel")
+    s_prog = sched_dict.get("programme")
     print(sched_dict)
     print(s_prog, s_dur, s_chnl)
     print(utc_title, utc_dur, chnl)
@@ -251,34 +266,34 @@ def check_for_match(sched_dict, utc_title, utc_time, utc_dur, chnl):
     if str(s_dur) != str(utc_dur):
         print(f"Replacing {s_prog} with {utc_title}")
         print(f"New duration is {utc_dur} mins, not {s_dur} minutes")
-        new_dct['start'] = utc_time
-        new_dct['duration'] = utc_dur
-        new_dct['channel'] = chnl
-        new_dct['programme'] = utc_title
+        new_dct["start"] = utc_time
+        new_dct["duration"] = utc_dur
+        new_dct["channel"] = chnl
+        new_dct["programme"] = utc_title
         return new_dct
 
 
 def get_next_dct(start, chnl, duration, title):
-    '''
+    """
     Create new dictionary entry for 'next'
-    '''
+    """
 
     if start and chnl and duration and title:
         next_dct = {}
-        next_dct['start'] = start
-        next_dct['duration'] = duration
-        next_dct['channel'] = chnl
-        next_dct['programme'] = title
+        next_dct["start"] = start
+        next_dct["duration"] = duration
+        next_dct["channel"] = chnl
+        next_dct["programme"] = title
         return next_dct
 
 
 def check_remaining_schedule(schedule, sched_time, index, total_index):
-    '''
+    """
     With next programme's end time as sched_time,
     check if any remaining schedule range
     have sched_time > start time.
     If so, remove as no longer relevant.
-    '''
+    """
 
     delete_list = []
     index = index + 1
@@ -299,13 +314,13 @@ def check_remaining_schedule(schedule, sched_time, index, total_index):
 
 
 def main():
-    '''
+    """
     Iterate channels, extract schedule to dictionary
     Collect UDP EIT data and fetch to variables
     Replace in schedule where durations don't match *now*
     Update *next* where different and remove schedules
     that are no longer relevant
-    '''
+    """
 
     # Temp start for limited channel access
     for chnl in CHANNELS.keys():
@@ -323,7 +338,11 @@ def main():
         schedule_path = os.path.join(SCHEDULES, f"{chnl}_schedule_{DATE}.json")
         schedule = []
         schedule = open_schedule(schedule_path)
-        folders = [d for d in os.listdir(chnl_path) if os.path.isdir(os.path.join(chnl_path, d))]
+        folders = [
+            d
+            for d in os.listdir(chnl_path)
+            if os.path.isdir(os.path.join(chnl_path, d))
+        ]
 
         for folder in folders:
             # Skip if programme over, out of scope for extending
@@ -346,7 +365,7 @@ def main():
             if len(running) == 0:
                 continue
             for items in running.values():
-                rsplit = items.split(', ')
+                rsplit = items.split(", ")
 
             # Collect data to vars
             now_dur = rsplit[0]
@@ -354,7 +373,9 @@ def main():
             now_end = rsplit[2]
             now_title = rsplit[4]
             now_duration = configure_duration(now_dur)
-            print(f"UTC entry: Title {now_title} - Datetime {DATE} {now_start} - Duration {now_duration}")
+            print(
+                f"UTC entry: Title {now_title} - Datetime {DATE} {now_start} - Duration {now_duration}"
+            )
             now_dt = f"{DATE} {now_start.replace('-',':')}"
 
             # Retrieve schedule indexes for entries with matching start time
@@ -368,18 +389,34 @@ def main():
                     if num == first:
                         continue
                     schedule.remove(schedule[num])
-                    LOGGER.info("Deleted duplicate schedule start time: %s", schedule[num])
+                    LOGGER.info(
+                        "Deleted duplicate schedule start time: %s", schedule[num]
+                    )
 
             # Compare data to schedule and look for mismatch - must return [{dicts}]
             mismatched = []
-            mismatched = check_for_match(schedule[index[0]], now_title, now_dt, now_duration, chnl)
+            mismatched = check_for_match(
+                schedule[index[0]], now_title, now_dt, now_duration, chnl
+            )
             if not mismatched:
                 continue
 
             # Here replace index of dict with new returned one
-            LOGGER.info("STREAM_SCHEDULE_CHECKS - %s - %s =====================", chnl, folder)
-            LOGGER.info("UTC Entry: %s %s, %s mins, %s", DATE, now_start, now_duration, now_title)
-            LOGGER.info("MISMATCH FOUND IN DATA: \nOriginal schedule:\n%s\nNew schedule:\n%s", schedule[index[0]], mismatched)
+            LOGGER.info(
+                "STREAM_SCHEDULE_CHECKS - %s - %s =====================", chnl, folder
+            )
+            LOGGER.info(
+                "UTC Entry: %s %s, %s mins, %s",
+                DATE,
+                now_start,
+                now_duration,
+                now_title,
+            )
+            LOGGER.info(
+                "MISMATCH FOUND IN DATA: \nOriginal schedule:\n%s\nNew schedule:\n%s",
+                schedule[index[0]],
+                mismatched,
+            )
             print(f"Replacing:\n {schedule[index[0]]}\n-----------\n{mismatched}")
             schedule[index[0]] = mismatched
 
@@ -392,7 +429,7 @@ def main():
             if next_index < len(schedule) and len(not_running) == 1:
 
                 for items in not_running.values():
-                    nrsplit = items.split(', ')
+                    nrsplit = items.split(", ")
 
                 next_dur = nrsplit[0]
                 next_start = nrsplit[1]
@@ -400,29 +437,45 @@ def main():
                 next_title = nrsplit[4]
                 next_duration = configure_duration(next_dur)
 
-                print(f"UTC entry: Title {next_title} - Datetime {DATE} {next_start} - Duration {next_duration}")
-                LOGGER.info("UTC Entry: %s %s, %s mins, %s", DATE, next_start, next_duration, next_title)
+                print(
+                    f"UTC entry: Title {next_title} - Datetime {DATE} {next_start} - Duration {next_duration}"
+                )
+                LOGGER.info(
+                    "UTC Entry: %s %s, %s mins, %s",
+                    DATE,
+                    next_start,
+                    next_duration,
+                    next_title,
+                )
                 next_dt_start = f"{DATE} {next_start.replace('-',':')}"
                 next_dt_end = f"{DATE} {next_end.replace('-',':')}"
-                print(f"******* NEXT INDEX: {next_index} LENGTH OF SCHED: {len(schedule)} *********")
+                print(
+                    f"******* NEXT INDEX: {next_index} LENGTH OF SCHED: {len(schedule)} *********"
+                )
 
                 # Assess if schedule should have 'next' inserted or updated
                 next_dt_udp = datetime.strptime(next_dt_end, FORMAT)
-                next_dt_sched = datetime.strptime(schedule[next_index]['start'], FORMAT)
-                next_schedule_mins = int(schedule[next_index]['duration'])
+                next_dt_sched = datetime.strptime(schedule[next_index]["start"], FORMAT)
+                next_schedule_mins = int(schedule[next_index]["duration"])
 
                 if next_dt_udp >= next_dt_sched or next_schedule_mins <= 5:
                     # Next schedule to be inserted
                     new_schedule = []
                     for num in range(0, next_index):
                         new_schedule.append(schedule[num])
-                    next_sched = get_next_dct(next_dt_start, chnl, next_duration, next_title)
+                    next_sched = get_next_dct(
+                        next_dt_start, chnl, next_duration, next_title
+                    )
                     new_schedule.append(next_sched)
-                    LOGGER.info("Inserting new dictionary entry for next item: %s", next_sched)
+                    LOGGER.info(
+                        "Inserting new dictionary entry for next item: %s", next_sched
+                    )
                     for num in range(next_index, len(schedule)):
                         new_schedule.append(schedule[num])
                     # Remove shcedule items that might be overlapping
-                    new_schedule = check_remaining_schedule(new_schedule, next_dt_end, next_index, len(new_schedule))
+                    new_schedule = check_remaining_schedule(
+                        new_schedule, next_dt_end, next_index, len(new_schedule)
+                    )
 
                 else:
                     # Update the next item's start time instead
@@ -430,7 +483,9 @@ def main():
                     schedule[next_index].update({"start": f"{next_dt_start}"})
                     LOGGER.info("New start time for next programme: %s", next_dt_start)
                     # Remove schedule items that have been replaced by different start time
-                    new_schedule = check_remaining_schedule(schedule, next_dt_end, next_index, len(schedule))
+                    new_schedule = check_remaining_schedule(
+                        schedule, next_dt_end, next_index, len(schedule)
+                    )
 
             orig_sched = []
             orig_sched = open_schedule(schedule_path)
@@ -440,11 +495,15 @@ def main():
                 LOGGER.info("********* NEW SCHEDULE:\n%s", new_schedule)
 
                 # Overwrite schedule dumping new dict to same filename
-                with open(schedule_path, 'w') as jsf:
+                with open(schedule_path, "w") as jsf:
                     json.dump(new_schedule, jsf, indent=4)
 
-            LOGGER.info("STREAM_SCHEDULE_CHECKS END - %s - %s =====================\n", chnl, folder)
+            LOGGER.info(
+                "STREAM_SCHEDULE_CHECKS END - %s - %s =====================\n",
+                chnl,
+                folder,
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

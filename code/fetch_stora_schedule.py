@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.8
 
-'''
+"""
 Fetch JSON from PATV EPG metadata API for next four day's shows (not today's)
 Overwrite each time and split into channels and place into correct channel/date folder
 
@@ -19,14 +19,15 @@ main():
 
 Joanna White
 2022
-'''
+"""
 
+import datetime
+import json
+import logging
 # Public packages
 import os
-import json
 import shutil
-import logging
-import datetime
+
 import requests
 import tenacity
 
@@ -36,18 +37,18 @@ TOM1 = TOD + datetime.timedelta(days=1)
 TOM2 = TOM1 + datetime.timedelta(days=1)
 TOM3 = TOM2 + datetime.timedelta(days=1)
 TOM4 = TOM3 + datetime.timedelta(days=1)
-TOM1 = TOM1.strftime('%Y-%m-%d')
-TOM2 = TOM2.strftime('%Y-%m-%d')
-TOM3 = TOM3.strftime('%Y-%m-%d')
-TOM4 = TOM4.strftime('%Y-%m-%d')
-START1 = f'{TOM1}T00:00:00'
-END1 = f'{TOM1}T23:59:00'
-START2 = f'{TOM2}T00:00:00'
-END2 = f'{TOM2}T23:59:00'
-START3 = f'{TOM3}T00:00:00'
-END3 = f'{TOM3}T23:59:00'
-START4 = f'{TOM4}T00:00:00'
-END4 = f'{TOM4}T23:59:00'
+TOM1 = TOM1.strftime("%Y-%m-%d")
+TOM2 = TOM2.strftime("%Y-%m-%d")
+TOM3 = TOM3.strftime("%Y-%m-%d")
+TOM4 = TOM4.strftime("%Y-%m-%d")
+START1 = f"{TOM1}T00:00:00"
+END1 = f"{TOM1}T23:59:00"
+START2 = f"{TOM2}T00:00:00"
+END2 = f"{TOM2}T23:59:00"
+START3 = f"{TOM3}T00:00:00"
+END3 = f"{TOM3}T23:59:00"
+START4 = f"{TOM4}T00:00:00"
+END4 = f"{TOM4}T23:59:00"
 # If a different date period needs targeting use:
 #START1 = '2024-11-05T00:00:00'
 #END1 = '2024-11-05T23:59:00'
@@ -61,6 +62,7 @@ SCHEDULE_PATH = os.path.join(FOLDERS, 'schedules/')
 COMPLETED = os.path.join(COMPLETE_PTH, 'schedules/')
 LOG_FILE = os.path.join(FOLDERS, 'logs/fetch_stora_schedule.log')
 
+
 # TARGET DATE PATHS
 DATE_PATH1 = START1[0:4] + "/" + START1[5:7] + "/" + START1[8:10]
 DATE_PATH2 = START2[0:4] + "/" + START2[5:7] + "/" + START2[8:10]
@@ -70,18 +72,20 @@ PATHS = [
     os.path.join(STORAGE_PATH, DATE_PATH1),
     os.path.join(STORAGE_PATH, DATE_PATH2),
     os.path.join(STORAGE_PATH, DATE_PATH3),
-    os.path.join(STORAGE_PATH, DATE_PATH4)
+    os.path.join(STORAGE_PATH, DATE_PATH4),
 ]
 
 # Setup logging
-logging.basicConfig(filename=LOG_FILE, filemode='a', format='%(asctime)s\t%(levelname)s\t%(message)s', level=logging.INFO)
+logging.basicConfig(
+    filename=LOG_FILE,
+    filemode="a",
+    format="%(asctime)s\t%(levelname)s\t%(message)s",
+    level=logging.INFO,
+)
 
 # PATV API details including unique identifiers for in-scope channels
-URL = os.environ['PATV_URL']
-HEADERS = {
-    "accept": "application/json",
-    "apikey": os.environ['PATV_KEY']
-}
+URL = os.environ["PATV_URL"]
+HEADERS = {"accept": "application/json", "apikey": os.environ["PATV_KEY"]}
 
 # Dictionary of Redux channel names and unique EPG retrieval paths
 CHANNEL = {
@@ -107,10 +111,9 @@ CHANNEL = {
 
 @tenacity.retry(wait=tenacity.wait_fixed(60))
 def fetch(value, pth):
-    '''
+    """
     Retrieval of EPG metadata dependent on date
-    '''
-    print(value, pth)
+    """
     if pth[-2:] == START1[8:10]:
         start, end = START1, END1
     elif pth[-2:] == START2[8:10]:
@@ -135,10 +138,10 @@ def fetch(value, pth):
 
 
 def main():
-    '''
+    """
     Create json dumps of programming
     Sort into new JSON schedule for off-air recording
-    '''
+    """
 
     # Checks if all channel folders exist in storage_path
     logging.info("========= FETCH RADOX SCHEDULE START ====================")
@@ -154,7 +157,10 @@ def main():
     list_of_json = []
     for pth in PATHS:
         # If metadata cannot be retrieved the script continues to next
-        logging.info("Requests will now attempt to retrieve the EPG channel metadata for path: %s", pth)
+        logging.info(
+            "Requests will now attempt to retrieve the EPG channel metadata for path: %s",
+            pth,
+        )
         for key, value in CHANNEL.items():
             dct = fetch(value, pth)
             if not dct:
@@ -176,34 +182,41 @@ def main():
         channel_pth = os.path.split(item)[0]
         date_path_split = os.path.split(channel_pth)
         date_path = date_path_split[0]
-        if '/video/' in date_path:
-            date_only = date_path.split('/video/')[1]
+        if "/video/" in date_path:
+            date_only = date_path.split("/video/")[1]
         else:
-            date_only = date_path.split('/STORA/')[1]
-        date_only = date_only.rstrip('/')
-        date_now = date_only.replace('/', '-')
-        day_schedule = os.path.join(SCHEDULE_PATH, f'{date_path_split[1]}_schedule_{date_now}.json')
+            date_only = date_path.split("/STORA/")[1]
+        date_only = date_only.rstrip("/")
+        date_now = date_only.replace("/", "-")
+        day_schedule = os.path.join(
+            SCHEDULE_PATH, f"{date_path_split[1]}_schedule_{date_now}.json"
+        )
         if not os.path.exists(day_schedule):
             logging.info("New schedule being created: %s", day_schedule)
-            with open(day_schedule, 'w') as f:
+            with open(day_schedule, "w") as f:
                 json.dump(schedule, f, indent=4)
         else:
-            logging.info("Schedule already exists, checking for mismatched data before replacing: %s", day_schedule)
-            with open(day_schedule, 'r') as inf:
+            logging.info(
+                "Schedule already exists, checking for mismatched data before replacing: %s",
+                day_schedule,
+            )
+            with open(day_schedule, "r") as inf:
                 existing_schedule = json.load(inf)
                 if len(schedule) == len(existing_schedule):
-                    logging.info("Length of current schedule and new schedule match. Likely data is good quality")
+                    logging.info(
+                        "Length of current schedule and new schedule match. Likely data is good quality"
+                    )
                 else:
                     os.remove(item)
                     continue
 
             # If already exists, compare and update any changes
             result = compare_schedule(day_schedule, schedule)
-            if 'Mismatch' in result:
+            if "Mismatch" in result:
                 logging.info("Schedule does not match, updates required")
                 try:
                     os.remove(day_schedule)
-                    with open(day_schedule, 'w') as f:
+                    with open(day_schedule, "w") as f:
                         json.dump(schedule, f, indent=4)
                 except Exception:
                     print(f"Unable to delete {day_schedule} or make new one")
@@ -219,27 +232,28 @@ def main():
 
 
 def retrieve_dct_data(key, pth, dct=None):
-    '''
+    """
     Check if DCT data is None, if not instigate json_split
-    '''
-
+    """
     if dct is None:
-        logging.critical("FAILED: Multiple attempt to retrieve metadata. Script exiting.")
+        logging.critical(
+            "FAILED: Multiple attempt to retrieve metadata. Script exiting."
+        )
         return False
     else:
         logging.info("EPG metadata successfully retrieved. Dumping to channel path")
         fname = os.path.join(pth, key, f"schedule_{key}.json")
-        with open(fname, 'w') as f:
+        with open(fname, "w") as f:
             json.dump(dct, f, indent=4)
         return fname
 
 
 def schedule_extraction(json_path):
-    '''
+    """
     For each JSON, open and extract title, date, start and end time
     Use this data to populate a top level channel JSON schedule
     Located in the STORAGE_PATH/CHANNEL
-    '''
+    """
     pth = os.path.split(json_path)[0]
     key = os.path.split(pth)[1]
 
@@ -249,18 +263,18 @@ def schedule_extraction(json_path):
         return False
 
     channel_schedule = []
-    for subdct in dct['item']:
-        title = date_time = duration = ''
+    for subdct in dct["item"]:
+        title = date_time = duration = ""
         try:
-            title = subdct['title']
+            title = subdct["title"]
         except (IndexError, KeyError, TypeError):
-            title = ''
+            title = ""
         try:
-            date_time = subdct['dateTime']
+            date_time = subdct["dateTime"]
         except (IndexError, KeyError, TypeError):
-            date_time = ''
+            date_time = ""
         try:
-            duration = subdct['duration']
+            duration = subdct["duration"]
             duration = int(duration)
         except (IndexError, KeyError, TypeError):
             duration = 0
@@ -276,67 +290,71 @@ def schedule_extraction(json_path):
 
 
 def build_timings(title, date_time, duration, key):
-    '''
+    """
     Receive timings per programme per schedule
     return list of dictionaries
-    '''
+    """
     data = {}
-    fmt = '%Y-%m-%d %H:%M:%S'
+    fmt = "%Y-%m-%d %H:%M:%S"
     time_start = datetime.datetime.fromisoformat(str(date_time[:23]))
     orig_start = time_start - datetime.timedelta(minutes=0)
 
     if type(duration) is str:
-        data = {'start': orig_start.strftime(fmt),
-                'duration': 0,
-                'channel': key,
-                'programme': title}
+        data = {
+            "start": orig_start.strftime(fmt),
+            "duration": 0,
+            "channel": key,
+            "programme": title,
+        }
 
     if type(duration) is int:
-        data = {'start': orig_start.strftime(fmt),
-                'duration': duration,
-                'channel': key,
-                'programme': title}
+        data = {
+            "start": orig_start.strftime(fmt),
+            "duration": duration,
+            "channel": key,
+            "programme": title,
+        }
 
     return data
 
 
 def compare_schedule(schedule_path, data):
-    '''
+    """
     Open existing schedule and compare current
     schedule to see if it's changed. Map change to logs
     Update different lines of original schedule
-    '''
+    """
     with open(schedule_path) as inf:
         existing_schedule = json.load(inf)
     json1 = existing_schedule
     json2 = data
 
     if json1 == json2:
-        return 'Match'
+        return "Match"
     else:
         mismatch = []
         for i in json1:
             if i not in json2:
                 mismatch.append(i)
-        return f'Mismatch: {mismatch}'
+        return f"Mismatch: {mismatch}"
 
 
 def clean_up():
-    '''
+    """
     Check schedules folder for schedules older than yesterday
     Where found move them to completed/schedules/ folder
     channel4_schedule_2022-03-03.json
-    '''
+    """
 
-    files = [x for x in os.listdir(SCHEDULE_PATH) if x.endswith('json')]
+    files = [x for x in os.listdir(SCHEDULE_PATH) if x.endswith("json")]
     for file in files:
-        if file.startswith('demonstration'):
+        if file.startswith("demonstration"):
             continue
         # Get date from name
-        filename = file.split('.')[0]
-        file_data = filename.split('_')[2]
+        filename = file.split(".")[0]
+        file_data = filename.split("_")[2]
         print(file_data)
-        if 'schedule' in str(file_data):
+        if "schedule" in str(file_data):
             continue
         two_days = datetime.datetime.now() - datetime.timedelta(days=2)
         two_days = two_days.strftime(FORMAT)
@@ -355,5 +373,5 @@ def clean_up():
                 logging.warning(exc)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
