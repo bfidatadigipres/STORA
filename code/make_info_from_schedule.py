@@ -15,7 +15,6 @@ main():
 5. Use csv to create CSV file and dump data to it
 6. Save alongside stream called 'info.csv'
 
-Joanna White
 2022
 """
 
@@ -30,26 +29,24 @@ import requests
 import tenacity
 
 # Static global variables
-FORMAT = "%Y-%m-%d %H:%M:%S"
-TFORM = "%Y-%m-%dT%H:%M:%S"
-STORAGE_PATH = os.environ["STORAGE_PATH"]
-STORA_PTH = os.environ["STORA_PATH"]
-CODEPTH = os.environ["CODE"]
-CONFIG_FILE = os.path.join(CODEPTH, "stream_config.json")
+FORMAT = '%Y-%m-%d %H:%M:%S'
+TFORM = '%Y-%m-%dT%H:%M:%S'
+STORAGE_PATH = os.environ['STORAGE_PATH']
+STORA_PTH = os.environ['STORA_PATH']
+CODEPTH = os.environ['CODE']
+FOLDERS = os.environ['STORA_FOLDERS']
+CONFIG_FILE = os.path.join(CODEPTH, 'stream_config.json')
 TODAY = datetime.now()
 YEST = TODAY - timedelta(1)
 YEST_PATH = os.path.join(
     STORAGE_PATH, f"{str(YEST)[0:4]}/{str(YEST)[5:7]}/{str(YEST)[8:10]}/"
 )
 YEST_DATE = f"{str(YEST)[0:4]}-{str(YEST)[5:7]}-{str(YEST)[8:10]}"
-# USE THESE FOR FORCING ALTERNATIVE DATES
-# YEST_PATH = os.path.join(STORAGE_PTH, '2022/07/21')
-# YEST_DATE = '2022-07-21'
 
 # Setup logging
-LOGGER = logging.getLogger("make_info_from_schedule")
-HDLR = logging.FileHandler(os.path.join(CODEPTH, "logs/make_info_from_schedule.log"))
-FORMATTER = logging.Formatter("%(asctime)s\t%(levelname)s\t%(message)s")
+LOGGER = logging.getLogger('make_info_from_schedule')
+HDLR = logging.FileHandler(os.path.join(FOLDERS, 'logs/make_info_from_schedule.log'))
+FORMATTER = logging.Formatter('%(asctime)s\t%(levelname)s\t%(message)s')
 HDLR.setFormatter(FORMATTER)
 LOGGER.addHandler(HDLR)
 LOGGER.setLevel(logging.INFO)
@@ -71,7 +68,6 @@ API_KEY = {
     "itv2": os.environ["PA_ITV2"],
     "itv3": os.environ["PA_ITV3"],
     "itv4": os.environ["PA_ITV4"],
-    "citv": os.environ["PA_CITV"],
     "channel4": os.environ["PA_CHANNEL4"],
     "more4": os.environ["PA_MORE4"],
     "film4": os.environ["PA_FILM4"],
@@ -87,7 +83,6 @@ CHANNELS = {
     "bbcnewshd": "BBC NEWS HD",
     "cbbchd": "CBBC HD",
     "cbeebieshd": "CBeebies HD",
-    "citv": "CITV",
     "channel4": "Channel 4 HD",
     "five": "Channel 5 HD",
     "film4": "Film4",
@@ -140,6 +135,7 @@ def fetch(chnl, start, end):
         LOGGER.info("fetch(): %s", params)
         req = requests.request("GET", URL, headers=HEADERS, params=params)
         dct = json.loads(req.text)
+        print(dct)
         return dct
     except Exception as err:
         print("fetch(): **** PROBLEM: Cannot fetch EPG metadata.")
@@ -158,7 +154,7 @@ def get_folder_time(folder):
     tm = tm.replace("-", ":")
     dt_str = f"{YEST_DATE} {tm}"
     dt_start = datetime.strptime(dt_str, FORMAT)
-    dt_end = dt_start + timedelta(minutes=10)
+    dt_end = dt_start + timedelta(minutes=5)
     return dt_end.strftime(TFORM), dt_start.strftime(TFORM), duration
 
 
@@ -176,13 +172,32 @@ def configure_data(data, start, duration, stream_duration, chnl):
         data = data[0]
 
     try:
-        title = data["item"][0]["title"]
-        description = data["item"][0]["summary"]["medium"]
+        title = data['item'][0]['title']
     except (IndexError, TypeError, KeyError):
-        title, description = "", ""
+        title = ''
 
     if not title:
         return None
+
+    # Manage potential that description may be in any/all position
+    descriptions = []
+    desc_med = ''
+    try:
+        descriptions.append(data['item'][0]['summary']['short'])
+    except (IndexError, TypeError, KeyError):
+        pass
+    try:
+        descriptions.append(data['item'][0]['summary']['medium'])
+        desc_med = data['item'][0]['summary']['medium']
+    except (IndexError, TypeError, KeyError):
+        pass
+    try:
+        descriptions.append(data['item'][0]['summary']['long'])
+    except (IndexError, TypeError, KeyError):
+        pass
+
+    descriptions.sort(key=len)
+    description = descriptions[0]
 
     info_list = [
         f"{chnl}",
@@ -193,6 +208,7 @@ def configure_data(data, start, duration, stream_duration, chnl):
         f"{duration.replace('-', ':')}",
         f"{stream_duration}",
     ]
+
     return info_list
 
 
@@ -241,16 +257,16 @@ def main():
         for folder in y_folders:
             print(f"Channel {chnl}, Folder {folder}")
             fpath = os.path.join(ypath, folder)
-            dt_end, dt_start, duration = get_folder_time(folder)
             files = os.listdir(fpath)
 
             if "info.csv" in files:
                 continue
-
+            dt_end, dt_start, duration = get_folder_time(folder)
             LOGGER.info("Folder found without info.csv in %s: %s", chnl, folder)
             json_data = fetch(chnl, dt_start, dt_end)
-            if "stream.mpeg2.ts" in files:
-                filepath = os.path.join(fpath, "stream.mpeg2.ts")
+            actual_duration, filepath = '', ''
+            if 'stream.mpeg2.ts' in files:
+                filepath = os.path.join(fpath, 'stream.mpeg2.ts')
                 actual_duration = get_metadata(filepath)
 
             if not actual_duration:

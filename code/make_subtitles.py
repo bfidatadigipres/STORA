@@ -10,7 +10,6 @@ main():
 2. Check if subtitles.vtt exists in folder with content
    If not, make subtitles.vtt from stream.mpeg2.ts
 
-Joanna White
 2022
 """
 
@@ -20,12 +19,12 @@ import subprocess
 from datetime import datetime, timedelta
 
 # Static global variables
-FORMAT = "%Y-%m-%d %H-%M-%S"
-STORAGE_PATH = os.environ["STORAGE_PATH"]
-CODEPTH = os.environ["CODE"]
-CONFIG_FILE = os.path.join(CODEPTH, "stream_config.json")
-SCHEDULES = os.path.join(CODEPTH, "schedules/")
-SAMPLES = os.path.join(CODEPTH, "samples/")
+FORMAT = '%Y-%m-%d %H-%M-%S'
+STORAGE_PATH = os.environ['STORAGE_PATH']
+CODEPTH = os.environ['CODE']
+FOLDERS = os.environ['STORA_FOLDERS']
+CONFIG_FILE = os.path.join(CODEPTH, 'stream_config.json')
+SCHEDULES = os.path.join(FOLDERS, 'schedules/')
 TODAY = datetime.now()
 YEST = TODAY - timedelta(1)
 DATE_PATH = os.path.join(
@@ -36,36 +35,33 @@ YEST_PATH = os.path.join(
 )
 TODAY_DATE = f"{str(TODAY)[0:4]}-{str(TODAY)[5:7]}-{str(TODAY)[8:10]}"
 YEST_DATE = f"{str(YEST)[0:4]}-{str(YEST)[5:7]}-{str(YEST)[8:10]}"
-# Test dates for trial
-# DATE_PATH = os.path.join(STORAGE_PATH, '2022/03/04')
-# TODAY_DATE = '2022-03-04'
 
 # Setup logging / yet to be implemented
-LOGGER = logging.getLogger("radox_make_subtitles")
-HDLR = logging.FileHandler(os.path.join(CODEPTH, "logs/radox_make_subtitles.log"))
-FORMATTER = logging.Formatter("%(asctime)s\t%(levelname)s\t%(message)s")
+LOGGER = logging.getLogger('radox_make_subtitles')
+HDLR = logging.FileHandler(os.path.join(FOLDERS, 'logs/radox_make_subtitles.log'))
+FORMATTER = logging.Formatter('%(asctime)s\t%(levelname)s\t%(message)s')
 HDLR.setFormatter(FORMATTER)
 LOGGER.addHandler(HDLR)
 LOGGER.setLevel(logging.INFO)
 
 CHANNELS = [
-    "bbconehd",
-    "bbctwohd",
-    "bbcthree",
-    "bbcfourhd",
-    "bbcnewshd",
-    "cbbchd",
-    "cbeebieshd",
-    "citv",
-    "channel4",
-    "five",
-    "film4",
-    "5star",
-    "itv1",
-    "itv2",
-    "itv3",
-    "itv4",
-    "more4",
+    'bbconehd',
+    'bbctwohd',
+    'bbcthree',
+    'bbcfourhd',
+    'bbcnewshd',
+    'cbbchd',
+    'cbeebieshd',
+    'channel4',
+    'five',
+    'film4',
+    '5star',
+    'itv1',
+    'itv2',
+    'itv3',
+    'itv4',
+    'more4',
+    'e4'
 ]
 
 
@@ -93,6 +89,10 @@ def make_vtt(filepath, folder):
     """
     Use subprocess to create VTT file
     """
+    try:
+        os.chmod(filepath, 0o777)
+    except OSError as err:
+        print(err)
 
     outpath = os.path.join(folder, "subtitles.vtt")
 

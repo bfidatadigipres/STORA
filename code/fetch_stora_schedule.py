@@ -50,17 +50,18 @@ END3 = f"{TOM3}T23:59:00"
 START4 = f"{TOM4}T00:00:00"
 END4 = f"{TOM4}T23:59:00"
 # If a different date period needs targeting use:
-# START1 = '2022-03-16T00:00:00'
-# END1 = '2022-03-16T23:59:00'
+#START1 = '2024-11-05T00:00:00'
+#END1 = '2024-11-05T23:59:00'
 
 # Global path variables
-FORMAT = "%Y-%m-%d"
-STORAGE_PATH = os.environ["STORAGE_PATH"]
-CODEPTH = os.environ["CODE"]
-COMPLETE_PTH = os.environ["STORA_COMPLETE"]
-SCHEDULE_PATH = os.path.join(CODEPTH, "schedules/")
-COMPLETED = os.path.join(COMPLETE_PTH, "schedules/")
-LOG_FILE = os.path.join(CODEPTH, "logs/fetch_stora_schedule.log")
+FORMAT = '%Y-%m-%d'
+STORAGE_PATH = os.environ.get('STORAGE_PATH')
+FOLDERS = os.environ.get('STORA_FOLDERS')
+COMPLETE_PTH = os.environ.get('STORA_COMPLETE')
+SCHEDULE_PATH = os.path.join(FOLDERS, 'schedules/')
+COMPLETED = os.path.join(COMPLETE_PTH, 'schedules/')
+LOG_FILE = os.path.join(FOLDERS, 'logs/fetch_stora_schedule.log')
+
 
 # TARGET DATE PATHS
 DATE_PATH1 = START1[0:4] + "/" + START1[5:7] + "/" + START1[8:10]
@@ -88,23 +89,23 @@ HEADERS = {"accept": "application/json", "apikey": os.environ["PATV_KEY"]}
 
 # Dictionary of Redux channel names and unique EPG retrieval paths
 CHANNEL = {
-    "bbconehd": os.environ["PA_BBCONE"],
-    "bbctwohd": os.environ["PA_BBCTWO"],
-    "bbcthree": os.environ["PA_BBCTHREE"],
-    "bbcfourhd": os.environ["PA_BBCFOUR"],
-    "bbcnewshd": os.environ["PA_BBCNEWS"],
-    "cbbchd": os.environ["PA_CBBC"],
-    "cbeebieshd": os.environ["PA_CBEEBIES"],
-    "itv1": os.environ["PA_ITV1"],
-    "itv2": os.environ["PA_ITV2"],
-    "itv3": os.environ["PA_ITV3"],
-    "itv4": os.environ["PA_ITV4"],
-    "citv": os.environ["PA_CITV"],
-    "channel4": os.environ["PA_CHANNEL4"],
-    "more4": os.environ["PA_MORE4"],
-    "film4": os.environ["PA_FILM4"],
-    "five": os.environ["PA_FIVE"],
-    "5star": os.environ["PA_5STAR"],
+    "bbconehd": os.environ['PA_BBCONE'],
+    "bbctwohd": os.environ['PA_BBCTWO'],
+    "bbcthree": os.environ['PA_BBCTHREE'],
+    "bbcfourhd": os.environ['PA_BBCFOUR'],
+    "bbcnewshd": os.environ['PA_BBCNEWS'],
+    "cbbchd": os.environ['PA_CBBC'],
+    "cbeebieshd": os.environ['PA_CBEEBIES'],
+    "itv1": os.environ['PA_ITV1'],
+    "itv2": os.environ['PA_ITV2'],
+    "itv3": os.environ['PA_ITV3'],
+    "itv4": os.environ['PA_ITV4'],
+    "channel4": os.environ['PA_CHANNEL4'],
+    "more4": os.environ['PA_MORE4'],
+    "film4": os.environ['PA_FILM4'],
+    "five": os.environ['PA_FIVE'],
+    "5star": os.environ['PA_5STAR'],
+    "e4": os.environ['PA_E4']
 }
 
 
@@ -124,22 +125,15 @@ def fetch(value, pth):
     else:
         return None
     try:
-        params = {
-            "channelId": f"{value}",
-            "start": start,
-            "end": end,
-            "aliases": "True",
-        }
-        req = requests.request("GET", URL, headers=HEADERS, params=params, timeout=12)
+        params = {"channelId": f"{value}", "start": start, "end": end, "aliases": "True"}
+        print(params)
+        req = requests.request("GET", URL, headers=HEADERS, params=params, timeout=1200)
+        print(req.text, params)
         dct = json.loads(req.text)
         return dct
-    except Exception:
-        print(
-            "fetch(): **** PROBLEM: Cannot fetch EPG metadata. Tenacity will retry every 60 seconds"
-        )
-        logging.critical(
-            "**** PROBLEM: Cannot fetch EPG metadata. Tenacity will retry every 60 second"
-        )
+    except Exception as err:
+        print(f"fetch(): {err} **** PROBLEM: Cannot fetch EPG metadata. Tenacity will retry every 60 seconds")
+        logging.critical("**** PROBLEM: Cannot fetch EPG metadata. Tenacity will retry every 60 second")
         return None
 
 
