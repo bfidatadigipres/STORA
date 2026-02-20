@@ -50,12 +50,12 @@ jobs:
       #   uses: github/codeql-action/analyze@v2
 
       - name: Run Black (format instead of check)
-        uses: psf/black@stable
+        uses: psf/black@6305bf1ae645ab7541be4f5028a86239316178eb
         with:
           options: "."
 
       - name: Run isort (apply changes)
-        uses: isort/isort-action@v1
+        uses: isort/isort-action@24d8a7a51d33ca7f36c3f23598dafa33f7071326
         with:
           requirements-files: ""
           sort-paths: "."
@@ -81,11 +81,11 @@ jobs:
         id: check-pr
         if: github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
-            echo "Checking for PR in bfidatadigipres/STORA for branch: $BRANCH_NAME"
+            echo "Checking for PR in bfidatadigipres/BFI_scripts for branch: $BRANCH_NAME"
 
             # Query the GitHub API to check for existing PRs
             PR_EXISTS=$(gh pr list \
-                --repo "bfidatadigipres/STORA" \
+                --repo "bfidatadigipres/BFI_scripts" \
                 --head "${BRANCH_NAME}" \
                 --base main \
                 --state open \
@@ -113,7 +113,7 @@ jobs:
         run: |
               echo "Creating PR for branch $REF_NAME"
               gh pr create \
-                --repo "bfidatadigipres/STORA" \
+                --repo "bfidatadigipres/BFI_scripts" \
                 --base main \
                 --head "$REPO_OWNER:$REF_NAME" \
                 --title "Automated PR for branch: $REF_NAME" \
@@ -152,8 +152,14 @@ jobs:
         - id: pylint
           run: |
             export LANG=en_US.UTF-8
+            changed_files=($(git diff --name-only HEAD~1 HEAD | grep '\.py$'))
             mkdir -p reports
-            python -m pylint *.py > reports/pylint-report.txt || true
+            if [ ${#changed_files[@]} -gt 0 ]; then
+                python -m pylint "${changed_files[@]}" > reports/pylint-report.txt || true
+            else
+                echo "help breaking"
+                # python -m pylint *.py > reports/pylint-report.txt || true
+            fi
             sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(E[0-9]\{4\}\)/\1🚨 \2/' reports/pylint-report.txt
             sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(W[0-9]\{4\}\)/\1⚠️ \2/' reports/pylint-report.txt
             sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(I[0-9]\{4\}\)/\1ℹ️ \2/' reports/pylint-report.txt
@@ -182,7 +188,7 @@ jobs:
           run: |
             echo "Checking for PR on branch: $BRANCH_NAME"
 
-            PR_NUMBER=$(gh pr list --repo "bfidatadigipres/STORA" --head "$BRANCH_NAME" --state open --json number --jq '.[0].number' 2>/dev/null || echo "error")
+            PR_NUMBER=$(gh pr list --repo "bfidatadigipres/BFI_scripts" --head "$BRANCH_NAME" --state open --json number --jq '.[0].number' 2>/dev/null || echo "error")
 
             echo "Found PR number: $PR_NUMBER"
             if [  "$PR_NUMBER" != "error" ]; then
@@ -194,11 +200,11 @@ jobs:
 
         - name: Comment on PR with Full Pylint Report
           if: steps.check-pr.outputs.exists == 'true'
-          uses: peter-evans/create-or-update-comment@v4
+          uses: peter-evans/create-or-update-comment@f5b41f6a455733f2c5f73ca67a62631e75861578
           with:
             issue-number: ${{ steps.check-pr.outputs.number }}
             edit-mode: replace
-            repository: bfidatadigipres/STORA
+            repository: bfidatadigipres/BFI_scripts
             body: |
               **Automated Pylint Report** 🧑‍💻
 
