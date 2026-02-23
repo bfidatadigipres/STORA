@@ -183,7 +183,7 @@ def main():
 
                 # Start new recording using initialised outfile as destination
                 time_print(f"Initialising recording for path: {outfile}")
-                (inst, player, media) = record_stream(rtp, outfile)
+                inst, player, media = record_stream(rtp, outfile)
                 player.play()
                 indent_print(f"Started recording: {prog_info[4]} ({CHANNEL})")
                 indent_print(
