@@ -227,7 +227,7 @@ def load_schedule(sched_path, silent=False):
     except OSError as err:
         write_print(f"Unable to modify permissions: {sched_path}\n{err}")
     try:
-        with open(sched_path, 'r') as file:
+        with open(sched_path, "r") as file:
             rjson = json.load(file)
         recordings = len(rjson)
         if not silent:
@@ -508,7 +508,7 @@ def main():
 
                 # Start new recording using initialised outfile as destination
                 time_print(f"Initialising recording for path: {outfile}", False)
-                (inst, player, media) = record_stream(rtp, outfile)
+                inst, player, media = record_stream(rtp, outfile)
                 player.play()
                 indent_print(
                     f"START Instance: {inst}, Player: {player}, Media: {media}", False
@@ -554,7 +554,7 @@ def launch_epg():
         if new_mod_time:
             # Update modification time and reload_schedule
             mod_time = new_mod_time
-            (recordings, handles) = reload_schedule(schedule, recordings, handles)
+            recordings, handles = reload_schedule(schedule, recordings, handles)
             write_print("Schedules reloaded due to modification update", True)
 
         handles_deleted = recordings_deleted = []
@@ -602,7 +602,7 @@ def launch_epg():
                     # Determine a suitable output filename
                     fn = initialise_ts(chnl_path, start, duration, first)
                     # Create the VLC instance and player
-                    (inst, player, media) = record_stream(data["url"], fn)
+                    inst, player, media = record_stream(data["url"], fn)
 
                     # Store the handle to the VLC instance and relevant data
                     handles[r] = {
@@ -668,11 +668,7 @@ def get_events(udp):
     then pass back to main. Retry if fails.
     """
 
-    cmd = [
-        DVBTEE,
-        '-i', udp,
-        '-t', '6', '-j'
-    ]
+    cmd = [DVBTEE, "-i", udp, "-t", "6", "-j"]
 
     try:
         capture = subprocess.check_output(cmd, timeout=15, stderr=subprocess.STDOUT)
