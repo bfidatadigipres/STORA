@@ -39,11 +39,11 @@ import subprocess
 from datetime import datetime, timedelta
 
 # Static global variables
-STORAGE_PATH = os.environ['STORAGE_PATH']
-CODEPTH = os.environ['CODE']
-FOLDERS = os.environ['STORA_FOLDERS']
-CONFIG_FILE = os.path.join(CODEPTH, 'stream_config.json')
-SCHEDULES = os.path.join(FOLDERS, 'schedules/')
+STORAGE_PATH = os.environ["STORAGE_PATH"]
+CODEPTH = os.environ["CODE"]
+FOLDERS = os.environ["STORA_FOLDERS"]
+CONFIG_FILE = os.path.join(CODEPTH, "stream_config.json")
+SCHEDULES = os.path.join(FOLDERS, "schedules/")
 TODAY = datetime.utcnow()
 START = TODAY.strftime("%Y-%m-%d")
 DATE_PATH = os.path.join(STORAGE_PATH, f"{START[0:4]}/{START[5:7]}/{START[8:10]}/")
@@ -51,32 +51,32 @@ DATE = f"{START[0:4]}-{START[5:7]}-{START[8:10]}"
 FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # Setup logging / yet to be implemented
-LOGGER = logging.getLogger('stream_schedule_checks')
-HDLR = logging.FileHandler(os.path.join(FOLDERS, 'logs/stream_schedule_checks.log'))
-FORMATTER = logging.Formatter('%(asctime)s\t%(levelname)s\t%(message)s')
+LOGGER = logging.getLogger("stream_schedule_checks")
+HDLR = logging.FileHandler(os.path.join(FOLDERS, "logs/stream_schedule_checks.log"))
+FORMATTER = logging.Formatter("%(asctime)s\t%(levelname)s\t%(message)s")
 HDLR.setFormatter(FORMATTER)
 LOGGER.addHandler(HDLR)
 LOGGER.setLevel(logging.INFO)
 
 CHANNELS = {
-    'bbconehd': 'BBC One HD',
-    'bbctwohd': 'BBC Two HD',
-    'bbcthree': 'BBC Three HD',
-    'bbcfourhd': 'BBC Four HD',
-    'bbcnewshd': 'BBC NEWS HD',
-    'cbbchd': 'CBBC HD',
-    'cbeebieshd': 'CBeebies HD',
-    'channel4': 'Channel 4 HD',
-    'film4': 'Film4',
-    'five': 'Channel 5 HD',
-    '5star': '5STAR',
-    'itv1': 'ITV HD',
-    'itv2': 'ITV2',
-    'itv3': 'ITV3',
-    'itv4': 'ITV4',
-    'itvbe': 'ITV BE',
-    'more4': 'More4',
-    'e4': 'E4'
+    "bbconehd": "BBC One HD",
+    "bbctwohd": "BBC Two HD",
+    "bbcthree": "BBC Three HD",
+    "bbcfourhd": "BBC Four HD",
+    "bbcnewshd": "BBC NEWS HD",
+    "cbbchd": "CBBC HD",
+    "cbeebieshd": "CBeebies HD",
+    "channel4": "Channel 4 HD",
+    "film4": "Film4",
+    "five": "Channel 5 HD",
+    "5star": "5STAR",
+    "itv1": "ITV HD",
+    "itv2": "ITV2",
+    "itv3": "ITV3",
+    "itv4": "ITV4",
+    "itvbe": "ITV BE",
+    "more4": "More4",
+    "e4": "E4",
 }
 
 

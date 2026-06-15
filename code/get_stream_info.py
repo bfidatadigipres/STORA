@@ -26,12 +26,12 @@ import subprocess
 from datetime import datetime, timedelta
 
 # Static global variables
-FORMAT = '%Y-%m-%d %H-%M-%S'
-STORAGE_PATH = os.environ['STORAGE_PATH']
-STORA_PTH = os.environ['STORA_PATH']
-CODEPTH = os.environ['CODE']
-FOLDERS = os.environ['STORA_FOLDERS']
-CONFIG_FILE = os.path.join(CODEPTH, 'stream_config.json')
+FORMAT = "%Y-%m-%d %H-%M-%S"
+STORAGE_PATH = os.environ["STORAGE_PATH"]
+STORA_PTH = os.environ["STORA_PATH"]
+CODEPTH = os.environ["CODE"]
+FOLDERS = os.environ["STORA_FOLDERS"]
+CONFIG_FILE = os.path.join(CODEPTH, "stream_config.json")
 TODAY = datetime.now()
 YEST = TODAY - timedelta(1)
 DATE_PATH = os.path.join(
@@ -44,30 +44,32 @@ TODAY_DATE = f"{str(TODAY)[0:4]}-{str(TODAY)[5:7]}-{str(TODAY)[8:10]}"
 YEST_DATE = f"{str(YEST)[0:4]}-{str(YEST)[5:7]}-{str(YEST)[8:10]}"
 
 # Setup logging
-LOGGER = logging.getLogger('get_stream_info')
-HDLR = logging.FileHandler(os.path.join(FOLDERS, 'logs/get_stream_info.log'))
-FORMATTER = logging.Formatter('%(asctime)s\t%(levelname)s\t%(message)s')
+LOGGER = logging.getLogger("get_stream_info")
+HDLR = logging.FileHandler(os.path.join(FOLDERS, "logs/get_stream_info.log"))
+FORMATTER = logging.Formatter("%(asctime)s\t%(levelname)s\t%(message)s")
 HDLR.setFormatter(FORMATTER)
 LOGGER.addHandler(HDLR)
 LOGGER.setLevel(logging.INFO)
 
-CHANNELS = {'bbconehd': 'BBC One HD',
-            'bbctwohd': 'BBC Two HD',
-            'bbcthree': 'BBC Three HD',
-            'bbcfourhd': 'BBC Four HD',
-            'bbcnewshd': 'BBC NEWS HD',
-            'cbbchd': 'CBBC HD',
-            'cbeebieshd': 'CBeebies HD',
-            'channel4': 'Channel 4 HD',
-            'five': 'Channel 5 HD',
-            'film4': 'Film4',
-            '5star': '5STAR',
-            'itv1': 'ITV HD',
-            'itv2': 'ITV2',
-            'itv3': 'ITV3',
-            'itv4': 'ITV4',
-            'e4': 'E4',
-            'more4': 'More4'}
+CHANNELS = {
+    "bbconehd": "BBC One HD",
+    "bbctwohd": "BBC Two HD",
+    "bbcthree": "BBC Three HD",
+    "bbcfourhd": "BBC Four HD",
+    "bbcnewshd": "BBC NEWS HD",
+    "cbbchd": "CBBC HD",
+    "cbeebieshd": "CBeebies HD",
+    "channel4": "Channel 4 HD",
+    "five": "Channel 5 HD",
+    "film4": "Film4",
+    "5star": "5STAR",
+    "itv1": "ITV HD",
+    "itv2": "ITV2",
+    "itv3": "ITV3",
+    "itv4": "ITV4",
+    "e4": "E4",
+    "more4": "More4",
+}
 
 
 def get_end_time(folder, date):
@@ -195,7 +197,9 @@ def main():
         ypath = os.path.join(YEST_PATH, chnl)
 
         try:
-            s_folders = [x for x in os.listdir(spath) if os.path.isdir(os.path.join(spath, x))]
+            s_folders = [
+                x for x in os.listdir(spath) if os.path.isdir(os.path.join(spath, x))
+            ]
             s_folders.sort()
             num_fold = len(s_folders) - 1
         except Exception:
@@ -218,8 +222,10 @@ def main():
                     LOGGER.info("Working in channel: %s", chnl)
                     LOGGER.info("Trying folder: %s", fpath)
                     LOGGER.info("Broadcast end: %s", datetime.strftime(dt_end, FORMAT))
-                    LOGGER.info("Passed end time for broadcast, checking for metadata 'Running' data")
-                    streampath = os.path.join(fpath, 'stream.mpeg2.ts')
+                    LOGGER.info(
+                        "Passed end time for broadcast, checking for metadata 'Running' data"
+                    )
+                    streampath = os.path.join(fpath, "stream.mpeg2.ts")
                     try:
                         os.chmod(streampath, 0o777)
                     except OSError as err:
@@ -262,7 +268,9 @@ def main():
                 write_to_csv(csv_path, match_data)
 
         try:
-            y_folders = [x for x in os.listdir(ypath) if os.path.isdir(os.path.join(ypath, x))]
+            y_folders = [
+                x for x in os.listdir(ypath) if os.path.isdir(os.path.join(ypath, x))
+            ]
             y_folders.sort()
             num_fold = len(y_folders) - 1
         except Exception:
@@ -287,8 +295,10 @@ def main():
                     LOGGER.info("Working in channel: %s", chnl)
                     LOGGER.info("Trying folder: %s", fpath)
                     LOGGER.info("Broadcast end: %s", datetime.strftime(dt_end, FORMAT))
-                    LOGGER.info("Passed end time for broadcast, checking for metadata 'Running' data")
-                    streampath = os.path.join(fpath, 'stream.mpeg2.ts')
+                    LOGGER.info(
+                        "Passed end time for broadcast, checking for metadata 'Running' data"
+                    )
+                    streampath = os.path.join(fpath, "stream.mpeg2.ts")
                     actual_duration = get_duration(streampath)
                     running_data = get_metadata(streampath)
                     if not running_data:
