@@ -34,44 +34,51 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 # Global paths
-STORAGE_PATH = os.environ['STORAGE_PATH']
-CODEPTH = os.environ['CODE']
-STORA_PTH = os.environ['STORA_PATH']
-FOLDERS = os.environ['STORA_FOLDERS']
-LOG_FILE = os.path.join(FOLDERS, 'logs/stora_channel_move_qnap04.log')
-CONFIG_FILE = os.path.join(CODEPTH, 'stream_config.json')
-STORA_CONTROL = os.path.join(CODEPTH, 'stora_control.json')
-RSYNC_LOG = os.environ['RSYNC_LOGS']
+STORAGE_PATH = os.environ["STORAGE_PATH"]
+CODEPTH = os.environ["CODE"]
+STORA_PTH = os.environ["STORA_PATH"]
+FOLDERS = os.environ["STORA_FOLDERS"]
+LOG_FILE = os.path.join(FOLDERS, "logs/stora_channel_move_qnap04.log")
+CONFIG_FILE = os.path.join(CODEPTH, "stream_config.json")
+STORA_CONTROL = os.path.join(CODEPTH, "stora_control.json")
+RSYNC_LOG = os.environ["RSYNC_LOGS"]
 
 # Date variables
 TODAY = datetime.now()
 YEST = TODAY - timedelta(2)
-YESTERDAY = int(YEST.strftime('%d'))
-DATE_PATH = os.path.join(STORAGE_PATH, f"{str(YEST)[:4]}/{str(YEST)[5:7]}/{str(YEST)[8:10]}/")
+YESTERDAY = int(YEST.strftime("%d"))
+DATE_PATH = os.path.join(
+    STORAGE_PATH, f"{str(YEST)[:4]}/{str(YEST)[5:7]}/{str(YEST)[8:10]}/"
+)
 MONTH_PATH = os.path.join(STORAGE_PATH, f"{str(YEST)[:4]}/{str(YEST)[5:7]}/")
 STORA = os.path.join(STORA_PTH, f"{str(YEST)[:4]}/{str(YEST)[5:7]}/{str(YEST)[8:10]}/")
 
 # Setup logging
-logging.basicConfig(filename=LOG_FILE, filemode='a', format='%(asctime)s\t%(levelname)s\t%(message)s', level=logging.INFO)
+logging.basicConfig(
+    filename=LOG_FILE,
+    filemode="a",
+    format="%(asctime)s\t%(levelname)s\t%(message)s",
+    level=logging.INFO,
+)
 
 CHANNELS = [
-    'bbconehd',
-    'bbctwohd',
-    'bbcthree',
-    'bbcfourhd',
-    'bbcnewshd',
-    'cbbchd',
-    'cbeebieshd',
-    'channel4',
-    'film4',
-    'five',
-    '5star',
-    'itv1',
-    'itv2',
-    'itv3',
-    'itv4',
-    'more4',
-    'e4'
+    "bbconehd",
+    "bbctwohd",
+    "bbcthree",
+    "bbcfourhd",
+    "bbcnewshd",
+    "cbbchd",
+    "cbeebieshd",
+    "channel4",
+    "film4",
+    "five",
+    "5star",
+    "itv1",
+    "itv2",
+    "itv3",
+    "itv4",
+    "more4",
+    "e4",
 ]
 
 
@@ -145,12 +152,18 @@ def rsync(fpath1, fpath2, chnl):
     new_log.touch(exist_ok=True)
 
     rsync_cmd = [
-        'rsync', '--remove-source-files', '-arvvh',
-        '--info=FLIST2,COPY2,PROGRESS2,NAME2,BACKUP2,STATS2',
-        '--perms', '--chmod=a+rwx',
-        '--no-owner', '--no-group', '--ignore-existing',
-        fpath1, fpath2,
-        f'--log-file={new_log}'
+        "rsync",
+        "--remove-source-files",
+        "-arvvh",
+        "--info=FLIST2,COPY2,PROGRESS2,NAME2,BACKUP2,STATS2",
+        "--perms",
+        "--chmod=a+rwx",
+        "--no-owner",
+        "--no-group",
+        "--ignore-existing",
+        fpath1,
+        fpath2,
+        f"--log-file={new_log}",
     ]
 
     try:
@@ -160,9 +173,11 @@ def rsync(fpath1, fpath2, chnl):
         logging.error("rsync(): Move command failure! %s", err, exc_info=True)
 
     with open(new_log) as file:
-        data = [ x for x in file.readlines() if 'sender removed' in str(x) ]
+        data = [x for x in file.readlines() if "sender removed" in str(x)]
         if len(data) > 2:
-            logging.info("Files written successfully to QNAP-04, and deleted source files.")
+            logging.info(
+                "Files written successfully to QNAP-04, and deleted source files."
+            )
         else:
             logging.info("No Rsync copy/deletion made, check log: %s", log_path)
 

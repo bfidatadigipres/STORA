@@ -29,13 +29,13 @@ import requests
 import tenacity
 
 # Static global variables
-FORMAT = '%Y-%m-%d %H:%M:%S'
-TFORM = '%Y-%m-%dT%H:%M:%S'
-STORAGE_PATH = os.environ['STORAGE_PATH']
-STORA_PTH = os.environ['STORA_PATH']
-CODEPTH = os.environ['CODE']
-FOLDERS = os.environ['STORA_FOLDERS']
-CONFIG_FILE = os.path.join(CODEPTH, 'stream_config.json')
+FORMAT = "%Y-%m-%d %H:%M:%S"
+TFORM = "%Y-%m-%dT%H:%M:%S"
+STORAGE_PATH = os.environ["STORAGE_PATH"]
+STORA_PTH = os.environ["STORA_PATH"]
+CODEPTH = os.environ["CODE"]
+FOLDERS = os.environ["STORA_FOLDERS"]
+CONFIG_FILE = os.path.join(CODEPTH, "stream_config.json")
 TODAY = datetime.now()
 YEST = TODAY - timedelta(1)
 YEST_PATH = os.path.join(
@@ -44,9 +44,9 @@ YEST_PATH = os.path.join(
 YEST_DATE = f"{str(YEST)[0:4]}-{str(YEST)[5:7]}-{str(YEST)[8:10]}"
 
 # Setup logging
-LOGGER = logging.getLogger('make_info_from_schedule')
-HDLR = logging.FileHandler(os.path.join(FOLDERS, 'logs/make_info_from_schedule.log'))
-FORMATTER = logging.Formatter('%(asctime)s\t%(levelname)s\t%(message)s')
+LOGGER = logging.getLogger("make_info_from_schedule")
+HDLR = logging.FileHandler(os.path.join(FOLDERS, "logs/make_info_from_schedule.log"))
+FORMATTER = logging.Formatter("%(asctime)s\t%(levelname)s\t%(message)s")
 HDLR.setFormatter(FORMATTER)
 LOGGER.addHandler(HDLR)
 LOGGER.setLevel(logging.INFO)
@@ -172,27 +172,27 @@ def configure_data(data, start, duration, stream_duration, chnl):
         data = data[0]
 
     try:
-        title = data['item'][0]['title']
+        title = data["item"][0]["title"]
     except (IndexError, TypeError, KeyError):
-        title = ''
+        title = ""
 
     if not title:
         return None
 
     # Manage potential that description may be in any/all position
     descriptions = []
-    desc_med = ''
+    desc_med = ""
     try:
-        descriptions.append(data['item'][0]['summary']['short'])
+        descriptions.append(data["item"][0]["summary"]["short"])
     except (IndexError, TypeError, KeyError):
         pass
     try:
-        descriptions.append(data['item'][0]['summary']['medium'])
-        desc_med = data['item'][0]['summary']['medium']
+        descriptions.append(data["item"][0]["summary"]["medium"])
+        desc_med = data["item"][0]["summary"]["medium"]
     except (IndexError, TypeError, KeyError):
         pass
     try:
-        descriptions.append(data['item'][0]['summary']['long'])
+        descriptions.append(data["item"][0]["summary"]["long"])
     except (IndexError, TypeError, KeyError):
         pass
 
@@ -264,9 +264,9 @@ def main():
             dt_end, dt_start, duration = get_folder_time(folder)
             LOGGER.info("Folder found without info.csv in %s: %s", chnl, folder)
             json_data = fetch(chnl, dt_start, dt_end)
-            actual_duration, filepath = '', ''
-            if 'stream.mpeg2.ts' in files:
-                filepath = os.path.join(fpath, 'stream.mpeg2.ts')
+            actual_duration, filepath = "", ""
+            if "stream.mpeg2.ts" in files:
+                filepath = os.path.join(fpath, "stream.mpeg2.ts")
                 actual_duration = get_metadata(filepath)
 
             if not actual_duration:
